@@ -1,0 +1,11 @@
+.vercel
+.env
+.env.local
+node_modules
+*.log
+
+# Generated at publish time
+public/images/daily/
+
+# Local source archive; not needed for the deployed site.
+郭崇城詩集/
