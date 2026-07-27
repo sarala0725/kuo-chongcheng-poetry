@@ -9,3 +9,6 @@ public/images/daily/
 
 # Local source archive; not needed for the deployed site.
 郭崇城詩集/
+
+.vercel
+.env*
