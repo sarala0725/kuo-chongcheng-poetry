@@ -189,11 +189,99 @@
         35% { opacity: .7; }
         100% { opacity: 0; transform: scale(1.18); }
       }
+      @keyframes gs-mobile-char-write {
+        0% {
+          opacity: 0;
+          clip-path: inset(0 100% 0 0);
+          filter: blur(1.5px);
+        }
+        38% { opacity: .72; }
+        100% {
+          opacity: 1;
+          clip-path: inset(0 0 0 0);
+          filter: blur(0);
+        }
+      }
       @media (max-width: 700px) {
-        .gs-calligraphy-brand { font-size: 24px !important; letter-spacing: .075em !important; }
+        html,
+        body {
+          max-width: 100% !important;
+          overflow-x: hidden !important;
+        }
+        header {
+          box-sizing: border-box !important;
+          height: auto !important;
+          min-height: 96px !important;
+          padding: 8px 16px 7px !important;
+          align-content: center !important;
+          align-items: center !important;
+          flex-wrap: wrap !important;
+          gap: 6px !important;
+        }
+        header > a {
+          box-sizing: border-box !important;
+          width: 100% !important;
+          min-width: 0 !important;
+          justify-content: space-between !important;
+          align-items: center !important;
+        }
+        header > nav {
+          box-sizing: border-box !important;
+          width: 100% !important;
+          min-width: 0 !important;
+          gap: 18px !important;
+          overflow-x: auto !important;
+          overflow-y: hidden !important;
+          padding: 2px 0 3px !important;
+          scrollbar-width: none;
+          -webkit-overflow-scrolling: touch;
+        }
+        header > nav::-webkit-scrollbar { display: none; }
+        header > nav a {
+          flex: 0 0 auto !important;
+          white-space: nowrap !important;
+          font-size: 12px !important;
+          letter-spacing: .1em !important;
+        }
+        header > nav button { display: none !important; }
+        .gs-calligraphy-brand {
+          white-space: nowrap !important;
+          font-size: 27px !important;
+          letter-spacing: .075em !important;
+        }
+        #about {
+          padding: 64px 24px 76px !important;
+        }
+        #about > div {
+          grid-template-columns: minmax(0, 1fr) !important;
+          gap: 38px !important;
+        }
+        #about h2 {
+          max-width: 100% !important;
+          margin: 14px 0 24px !important;
+          font-size: clamp(27px, 7.2vw, 30px) !important;
+          line-height: 1.45 !important;
+          word-break: keep-all !important;
+          overflow-wrap: anywhere !important;
+        }
         .gs-calligraphy-hero .gs-hero-vector-slot {
-          width: clamp(48px, 17vw, 92px) !important;
-          height: clamp(68px, 20vw, 110px) !important;
+          width: 19.5% !important;
+          height: clamp(70px, 22vw, 90px) !important;
+        }
+        .gs-hero-svg {
+          filter: none !important;
+          overflow: hidden !important;
+        }
+        .gs-hero-stroke-reveal {
+          display: none !important;
+        }
+        .gs-hero-fill {
+          will-change: clip-path, opacity;
+          animation:
+            gs-mobile-char-write .7s cubic-bezier(.22,.72,.2,1)
+              calc(.12s + var(--char-order) * .48s) both,
+            gs-fill-breathe var(--settle-duration) ease-in-out
+              calc(3.2s + var(--char-order) * .18s) infinite alternate !important;
         }
       }
       @media (prefers-reduced-motion: reduce) {
