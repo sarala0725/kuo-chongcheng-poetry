@@ -9,10 +9,18 @@ function dismissLoader() {
   if (loaderDismissed) return;
   loaderDismissed = true;
   loader.classList.add("is-ready");
+  window.setTimeout(() => {
+    frame.contentWindow?.postMessage({ type: "gs-play-hero" }, "*");
+  }, 1150);
 }
 
 function prepareCollection() {
   try {
+    const echoResetVersion = "gs_echo_reset_2026_07";
+    if (frame.contentWindow.localStorage.getItem(echoResetVersion) !== "1") {
+      frame.contentWindow.localStorage.removeItem("gs_likes");
+      frame.contentWindow.localStorage.setItem(echoResetVersion, "1");
+    }
     frame.contentWindow.localStorage.setItem("gs_loggedIn", "1");
   } catch {
     // The collection still works if the browser blocks local storage.

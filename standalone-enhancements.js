@@ -58,6 +58,286 @@
   ]);
   let activeTitle = "";
 
+  function styleMasthead() {
+    if (document.getElementById("gs-calligraphy-style")) return;
+    const candidate = Array.from(document.querySelectorAll("body *")).find((item) => {
+      const rect = item.getBoundingClientRect();
+      return item.children.length === 0 && item.textContent.trim() === "耕舍詩文集" && rect.top < 100 && rect.left < 280;
+    });
+    if (!candidate) return;
+    candidate.classList.add("gs-calligraphy-brand");
+    candidate.style.setProperty("font-family", '"GS HanWang ShinSu", cursive', "important");
+    const style = document.createElement("style");
+    style.id = "gs-calligraphy-style";
+    style.textContent = `
+      @font-face {
+        font-family: "GS HanWang ShinSu";
+        src: url("assets/fonts/HanWangShinSuMedium.ttf") format("truetype");
+        font-display: swap;
+        font-style: normal;
+        font-weight: 400;
+      }
+      .gs-calligraphy-brand {
+        position: relative !important;
+        display: inline-block !important;
+        color: #2f2922 !important;
+        font-family: "GS HanWang ShinSu", "STXingkai", "STKaiti", cursive !important;
+        font-size: clamp(29px, 2.3vw, 38px) !important;
+        font-weight: 400 !important;
+        letter-spacing: .075em !important;
+        line-height: 1 !important;
+        text-shadow: .7px 1px 0 rgba(97, 74, 46, .18) !important;
+        transform: skewX(-2deg) scaleX(1.06);
+        transform-origin: left center;
+      }
+      .gs-calligraphy-hero {
+        font-family: "GS HanWang ShinSu", "STXingkai", "STKaiti", cursive !important;
+        font-size: clamp(54px, 8.5vw, 132px) !important;
+        font-weight: 400 !important;
+        letter-spacing: .035em !important;
+        line-height: 1 !important;
+        color: #3a342d !important;
+        background: none !important;
+        -webkit-text-fill-color: currentColor !important;
+      }
+      .gs-calligraphy-hero,
+      .gs-calligraphy-hero *,
+      .gs-calligraphy-hero-glyph {
+        font-family: "GS HanWang ShinSu", "STXingkai", "STKaiti", cursive !important;
+        color: inherit !important;
+        -webkit-text-fill-color: currentColor !important;
+      }
+      .gs-calligraphy-hero .gs-hero-vector-slot {
+        width: clamp(62px, 13vw, 148px) !important;
+        height: clamp(82px, 15vw, 168px) !important;
+        flex: 0 1 auto;
+      }
+      .gs-hero-svg {
+        display: block;
+        width: 100%;
+        height: 100%;
+        overflow: visible;
+        filter: drop-shadow(.8px 1.2px 0 rgba(92, 70, 44, .14));
+      }
+      .gs-hero-stroke-reveal {
+        fill: none;
+        stroke: #3a342d;
+        stroke-width: 118;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        stroke-dasharray: 1;
+        stroke-dashoffset: 1;
+        opacity: .94;
+        animation: gs-stroke-write var(--stroke-duration) cubic-bezier(.35,.04,.18,1) forwards;
+        animation-delay: var(--stroke-delay);
+      }
+      .gs-hero-fill {
+        fill: #3a342d;
+        opacity: 0;
+        animation:
+          gs-vector-fill .58s ease-out var(--fill-delay) forwards,
+          gs-fill-breathe var(--settle-duration) ease-in-out var(--settle-delay) infinite alternate;
+      }
+      .gs-hero-waiting .gs-hero-stroke-reveal,
+      .gs-hero-waiting .gs-hero-fill {
+        animation-play-state: paused;
+      }
+      @keyframes gs-stroke-write {
+        0% { opacity: 0; stroke-dashoffset: 1; filter: blur(2px); }
+        14% { opacity: .9; }
+        100% { opacity: .96; stroke-dashoffset: 0; filter: blur(0); }
+      }
+      @keyframes gs-vector-fill {
+        0% { opacity: 0; filter: blur(2px); }
+        55% { opacity: .78; }
+        100% { opacity: 1; filter: blur(0); }
+      }
+      @keyframes gs-fill-breathe {
+        0%, 16% { fill: #3a342d; }
+        43% { fill: #514333; }
+        68% { fill: #332f2a; }
+        100% { fill: #463a2e; }
+      }
+      .gs-calligraphy-hero .gs-hero-char {
+        position: relative;
+        display: inline-block;
+        opacity: 0;
+        filter: blur(5px);
+        clip-path: inset(0 100% 0 0);
+        transform: translateY(12px) scale(1.08, .94);
+        transform-origin: center bottom;
+        animation: gs-hero-ink 1.15s cubic-bezier(.16,.74,.2,1) forwards;
+        animation-delay: calc(.38s + var(--char-order) * .3s);
+      }
+      .gs-calligraphy-hero .gs-hero-char::after {
+        content: "";
+        position: absolute;
+        inset: 12% 5%;
+        background: radial-gradient(ellipse at 45% 55%, rgba(65, 53, 40, .18), transparent 66%);
+        opacity: 0;
+        pointer-events: none;
+        animation: gs-ink-breathe .72s ease-out forwards;
+        animation-delay: calc(.56s + var(--char-order) * .3s);
+      }
+      @keyframes gs-hero-ink {
+        0% { opacity: 0; filter: blur(5px); clip-path: inset(0 100% 0 0); transform: translateY(12px) scale(1.08, .94); }
+        42% { opacity: .68; filter: blur(1.8px); }
+        100% { opacity: 1; filter: blur(0); clip-path: inset(0 0 0 0); transform: translateY(0) scale(1); }
+      }
+      @keyframes gs-ink-breathe {
+        0% { opacity: 0; transform: scale(.7); }
+        35% { opacity: .7; }
+        100% { opacity: 0; transform: scale(1.18); }
+      }
+      @media (max-width: 700px) {
+        .gs-calligraphy-brand { font-size: 24px !important; letter-spacing: .075em !important; }
+        .gs-calligraphy-hero .gs-hero-vector-slot {
+          width: clamp(48px, 17vw, 92px) !important;
+          height: clamp(68px, 20vw, 110px) !important;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .gs-calligraphy-hero .gs-hero-char,
+        .gs-calligraphy-hero .gs-hero-char::after,
+        .gs-hero-stroke-reveal,
+        .gs-hero-fill {
+          animation-duration: .01ms !important;
+          animation-delay: 0s !important;
+        }
+      }
+    `;
+    document.head.append(style);
+  }
+
+  function styleHeroTitle() {
+    if (document.documentElement.dataset.gsHeroReady === "1" && !document.querySelector("#hw-hero svg:not(.gs-hero-svg)")) return;
+    const expectedCharacters = Array.from("耕舍詩文集");
+    const hanziHero = document.querySelector("#hw-hero");
+    const hanziSlots = Array.from(document.querySelectorAll("#hw-hero [data-hz]"));
+    if (hanziHero && hanziSlots.length === expectedCharacters.length) {
+      hanziHero.classList.add("gs-calligraphy-hero", "gs-hero-waiting");
+      hanziHero.setAttribute("aria-label", "耕舍詩文集");
+      const totalStrokeCount = hanziSlots.reduce((sum, slot, index) => {
+        const character = slot.getAttribute("data-hz") || expectedCharacters[index];
+        return sum + (window.GS_HERO_CALLIGRAPHY?.[character]?.medians?.length || 0);
+      }, 0);
+      const settledAt = 1.43 + totalStrokeCount * .145;
+      let strokeCursor = 0;
+      hanziSlots.forEach((slot, index) => {
+        const character = slot.getAttribute("data-hz") || expectedCharacters[index];
+        const vector = window.GS_HERO_CALLIGRAPHY?.[character];
+        if (vector) {
+          const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+          const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+          const clip = document.createElementNS("http://www.w3.org/2000/svg", "clipPath");
+          const clipGlyph = document.createElementNS("http://www.w3.org/2000/svg", "path");
+          const revealGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+          const fill = document.createElementNS("http://www.w3.org/2000/svg", "path");
+          const clipId = `gs-hero-clip-${index}`;
+          svg.classList.add("gs-hero-svg");
+          svg.setAttribute("viewBox", vector.viewBox);
+          svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
+          svg.setAttribute("aria-hidden", "true");
+          svg.style.setProperty("--char-order", index);
+          svg.style.setProperty("--settle-delay", `${(settledAt + index * .24).toFixed(2)}s`);
+          svg.style.setProperty("--settle-duration", `${(7.8 + index * 1.03).toFixed(2)}s`);
+          clip.setAttribute("id", clipId);
+          clipGlyph.setAttribute("d", vector.path);
+          clip.append(clipGlyph);
+          defs.append(clip);
+          revealGroup.setAttribute("clip-path", `url(#${clipId})`);
+          vector.medians.forEach((median) => {
+            const stroke = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            const medianPath = median.map(([x, y], pointIndex) => {
+              return `${pointIndex === 0 ? "M" : "L"}${x} ${900 - y}`;
+            }).join(" ");
+            const duration = Math.min(.38, Math.max(.2, median.length * .03));
+            stroke.classList.add("gs-hero-stroke-reveal");
+            stroke.setAttribute("d", medianPath);
+            stroke.setAttribute("pathLength", "1");
+            stroke.style.setProperty("--stroke-delay", `${(.15 + strokeCursor * .145).toFixed(2)}s`);
+            stroke.style.setProperty("--stroke-duration", `${duration.toFixed(2)}s`);
+            revealGroup.append(stroke);
+            strokeCursor += 1;
+          });
+          fill.classList.add("gs-hero-fill");
+          fill.setAttribute("d", vector.path);
+          fill.style.setProperty("--fill-delay", `${(.5 + strokeCursor * .145).toFixed(2)}s`);
+          svg.append(defs, revealGroup, fill);
+          slot.replaceChildren(svg);
+        } else {
+          const span = document.createElement("span");
+          span.className = "gs-hero-char gs-calligraphy-hero-glyph";
+          span.style.setProperty("--char-order", index);
+          span.setAttribute("aria-hidden", "true");
+          span.textContent = character;
+          slot.replaceChildren(span);
+        }
+        slot.classList.add("gs-hero-vector-slot");
+        slot.style.setProperty("display", "inline-flex", "important");
+        slot.style.setProperty("align-items", "center", "important");
+        slot.style.setProperty("justify-content", "center", "important");
+        slot.style.setProperty("overflow", "visible", "important");
+        slot.style.setProperty("font-family", '"GS HanWang ShinSu", cursive', "important");
+      });
+      window.setTimeout(() => {
+        hanziHero.classList.remove("gs-hero-waiting");
+      }, 12000);
+      document.documentElement.dataset.gsHeroReady = "1";
+      return;
+    }
+    const glyphCandidates = Array.from(document.querySelectorAll("body *")).filter((item) => {
+      const text = item.textContent.replace(/\s+/g, "");
+      const rect = item.getBoundingClientRect();
+      return expectedCharacters.includes(text) &&
+        rect.top > 90 &&
+        rect.width > 24 &&
+        rect.height > 48;
+    });
+    const foundCharacters = new Set(glyphCandidates.map((item) => item.textContent.replace(/\s+/g, "")));
+    if (expectedCharacters.every((character) => foundCharacters.has(character))) {
+      glyphCandidates.forEach((glyph) => {
+        const character = glyph.textContent.replace(/\s+/g, "");
+        const index = expectedCharacters.indexOf(character);
+        const layers = [glyph, ...glyph.querySelectorAll("*")];
+        layers.forEach((layer) => {
+          layer.classList.add("gs-calligraphy-hero-glyph");
+          layer.style.setProperty("font-family", '"GS HanWang ShinSu", cursive', "important");
+          layer.style.setProperty("font-weight", "400", "important");
+          layer.style.setProperty("color", "#3a342d", "important");
+          layer.style.setProperty("-webkit-text-fill-color", "#3a342d", "important");
+          layer.style.setProperty("background-image", "none", "important");
+        });
+        if (glyph.children.length === 0) {
+          glyph.classList.add("gs-hero-char");
+          glyph.style.setProperty("--char-order", index);
+        }
+      });
+      document.documentElement.dataset.gsHeroReady = "1";
+      return;
+    }
+    const candidates = Array.from(document.querySelectorAll("body *")).filter((item) => {
+      const rect = item.getBoundingClientRect();
+      return item.textContent.replace(/\s+/g, "") === "耕舍詩文集" && rect.top > 90 && rect.width > 180 && rect.height > 48;
+    });
+    const title = candidates.sort((left, right) => {
+      return right.getBoundingClientRect().height - left.getBoundingClientRect().height;
+    })[0];
+    if (!title) return;
+    title.classList.add("gs-calligraphy-hero");
+    title.setAttribute("aria-label", "耕舍詩文集");
+    title.textContent = "";
+    Array.from("耕舍詩文集").forEach((character, index) => {
+      const span = document.createElement("span");
+      span.className = "gs-hero-char";
+      span.style.setProperty("--char-order", index);
+      span.setAttribute("aria-hidden", "true");
+      span.textContent = character;
+      title.append(span);
+    });
+    document.documentElement.dataset.gsHeroReady = "1";
+  }
+
   function mountModalIllustration() {
     const title = Array.from(document.querySelectorAll("h1,h2,h3")).filter((item) => !item.closest("#poems article") && item.getClientRects().length > 0 && illustrations.has(item.textContent.trim())).at(-1);
     if (!title) return;
@@ -78,6 +358,9 @@
 
   window.addEventListener("message", (event) => {
     if (event.data?.type === "gs-go-top") goTop();
+    if (event.data?.type === "gs-play-hero") {
+      document.querySelector("#hw-hero")?.classList.remove("gs-hero-waiting");
+    }
   });
 
   document.addEventListener("click", (event) => {
@@ -108,4 +391,6 @@
   }, 250);
 
   window.setInterval(mountModalIllustration, 250);
+  window.setInterval(styleMasthead, 250);
+  window.setInterval(styleHeroTitle, 250);
 })();
