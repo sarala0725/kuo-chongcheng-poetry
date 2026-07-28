@@ -57,6 +57,14 @@
     ["\u8b80\u9673\u4e4b\u85e9\u5927\u4f5c\u8b1d\u5929\u3001\u79d1\u5b78\u5bb6\u7684\u82e6\u60b6\u611f\u8ce6", "assets/ink-wash/chen-zhifan-reflections.png"],
   ]);
   let activeTitle = "";
+  let activeCollection = "\u8015\u820d\u96c6";
+  let activeWorkType = "\u5168\u90e8";
+  const collectionOrder = [
+    "\u8015\u820d\u96c6",
+    "\u7389\u5dba\u96c6",
+    "\u7389\u7a4e\u96c6",
+    "\u6182\u6642\u541f",
+  ];
 
   function styleMasthead() {
     if (document.getElementById("gs-calligraphy-style")) return;
@@ -439,6 +447,400 @@
     title.before(image);
   }
 
+  function ensureLibraryStyle() {
+    if (document.getElementById("gs-library-style")) return;
+    const style = document.createElement("style");
+    style.id = "gs-library-style";
+    style.textContent = `
+      .gs-library-browser {
+        grid-column: 1 / -1;
+        margin: 34px 0 32px;
+        padding: 24px 26px 22px;
+        border: 1px solid rgba(69, 80, 65, .18);
+        background:
+          radial-gradient(circle at 92% 12%, rgba(255,255,255,.72), transparent 28%),
+          rgba(247, 243, 231, .72);
+        box-shadow: 0 12px 34px rgba(54, 48, 40, .045);
+      }
+      .gs-library-kicker {
+        margin: 0 0 6px;
+        color: #806a4e;
+        font-size: 12px;
+        letter-spacing: .22em;
+      }
+      .gs-library-heading {
+        margin: 0 0 20px;
+        color: #342f29;
+        font-family: serif;
+        font-size: clamp(19px, 2.2vw, 25px);
+        font-weight: 400;
+        letter-spacing: .08em;
+      }
+      .gs-library-filter-row {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        margin-top: 12px;
+      }
+      .gs-library-filter-label {
+        flex: 0 0 52px;
+        color: #777166;
+        font-size: 12px;
+        letter-spacing: .16em;
+      }
+      .gs-library-filter-options {
+        display: flex;
+        gap: 8px;
+        min-width: 0;
+        overflow-x: auto;
+        padding: 2px 1px 4px;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+      }
+      .gs-library-filter-options::-webkit-scrollbar { display: none; }
+      .gs-library-filter {
+        appearance: none;
+        flex: 0 0 auto;
+        min-height: 35px;
+        padding: 7px 14px;
+        border: 1px solid rgba(69, 80, 65, .22);
+        border-radius: 999px;
+        background: transparent;
+        color: #5f5b53;
+        cursor: pointer;
+        font: inherit;
+        font-size: 13px;
+        letter-spacing: .08em;
+        transition: background .2s ease, color .2s ease, border-color .2s ease;
+      }
+      .gs-library-filter:hover,
+      .gs-library-filter[aria-pressed="true"] {
+        border-color: #6c806d;
+        background: #6c806d;
+        color: #fffdf6;
+      }
+      .gs-library-result {
+        margin: 16px 0 0;
+        color: #8a8275;
+        font-size: 12px;
+        letter-spacing: .12em;
+      }
+      .gs-library-prose-grid {
+        grid-column: 1 / -1;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 22px;
+        margin-top: 22px;
+      }
+      .gs-library-empty {
+        grid-column: 1 / -1;
+        display: none;
+        margin: 28px 0 0;
+        padding: 40px 24px;
+        border: 1px dashed rgba(69, 80, 65, .24);
+        color: #81796d;
+        text-align: center;
+        letter-spacing: .12em;
+      }
+      #essays.gs-essays-integrated { display: none !important; }
+      .gs-share-toast {
+        position: fixed;
+        z-index: 160;
+        right: 22px;
+        bottom: 24px;
+        max-width: min(330px, calc(100vw - 44px));
+        padding: 12px 17px;
+        border: 1px solid rgba(255,255,255,.35);
+        border-radius: 4px;
+        background: rgba(53, 57, 49, .94);
+        color: #fffdf6;
+        box-shadow: 0 10px 28px rgba(25,24,20,.2);
+        font-size: 13px;
+        letter-spacing: .06em;
+        opacity: 0;
+        transform: translateY(8px);
+        transition: opacity .2s ease, transform .2s ease;
+      }
+      .gs-share-toast.is-visible { opacity: 1; transform: translateY(0); }
+      .gs-award-modal-image {
+        display: block !important;
+        flex: 0 1 auto !important;
+        width: auto !important;
+        height: auto !important;
+        max-width: min(92vw, 1000px) !important;
+        max-height: calc(100dvh - 180px) !important;
+        margin: auto auto 0 !important;
+        object-fit: contain !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+      }
+      @media (max-width: 700px) {
+        .gs-library-browser {
+          margin: 26px 0 26px;
+          padding: 21px 17px 18px;
+        }
+        .gs-library-filter-row {
+          display: block;
+          margin-top: 15px;
+        }
+        .gs-library-filter-label {
+          display: block;
+          margin-bottom: 7px;
+        }
+        .gs-library-prose-grid {
+          grid-template-columns: minmax(0, 1fr);
+          gap: 16px;
+        }
+        .gs-award-modal-image {
+          max-width: calc(100vw - 30px) !important;
+          max-height: calc(100dvh - 190px) !important;
+        }
+      }
+    `;
+    document.head.append(style);
+  }
+
+  function getCardCollection(card) {
+    return card?.querySelector("span")?.textContent.trim() || "";
+  }
+
+  function buildFilterRow(label, values, kind) {
+    const row = document.createElement("div");
+    row.className = "gs-library-filter-row";
+    const heading = document.createElement("span");
+    heading.className = "gs-library-filter-label";
+    heading.textContent = label;
+    const options = document.createElement("div");
+    options.className = "gs-library-filter-options";
+    values.forEach((value) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "gs-library-filter";
+      button.dataset.gsFilterKind = kind;
+      button.dataset.gsFilterValue = value;
+      button.textContent = value;
+      button.addEventListener("click", () => {
+        if (kind === "collection") activeCollection = value;
+        else activeWorkType = value;
+        applyLibraryFilters();
+      });
+      options.append(button);
+    });
+    row.append(heading, options);
+    return row;
+  }
+
+  function applyLibraryFilters() {
+    const browser = document.querySelector(".gs-library-browser");
+    if (!browser) return;
+    let visibleCount = 0;
+    document.querySelectorAll("#poems article[data-gs-work-type], .gs-library-prose-grid article").forEach((card) => {
+      const matchesCollection = activeCollection === "\u5168\u90e8\u8a69\u96c6" || card.dataset.gsCollection === activeCollection;
+      const matchesType = activeWorkType === "\u5168\u90e8" || card.dataset.gsWorkType === activeWorkType;
+      const visible = matchesCollection && matchesType;
+      card.hidden = !visible;
+      card.style.setProperty("display", visible ? "" : "none", "important");
+      if (visible) visibleCount += 1;
+    });
+    browser.querySelectorAll("[data-gs-filter-kind]").forEach((button) => {
+      const selected = button.dataset.gsFilterKind === "collection"
+        ? button.dataset.gsFilterValue === activeCollection
+        : button.dataset.gsFilterValue === activeWorkType;
+      button.setAttribute("aria-pressed", selected ? "true" : "false");
+    });
+    const result = browser.querySelector(".gs-library-result");
+    if (result) result.textContent = `${activeCollection} \u00b7 ${activeWorkType} \u00b7 ${visibleCount} \u7bc7`;
+    const empty = document.querySelector(".gs-library-empty");
+    if (empty) empty.style.display = visibleCount ? "none" : "block";
+  }
+
+  function mountLibraryBrowser() {
+    ensureLibraryStyle();
+    const poemSection = document.querySelector("#poems");
+    const poemCards = Array.from(poemSection?.querySelectorAll("article") || [])
+      .filter((card) => !card.closest(".gs-library-prose-grid"));
+    const poemGrid = poemCards[0]?.parentElement;
+    if (!poemSection || !poemGrid || !poemCards.length) return;
+
+    poemCards.forEach((card) => {
+      card.dataset.gsWorkType = "\u8a69\u8a5e";
+      card.dataset.gsCollection = getCardCollection(card);
+    });
+
+    let browser = poemSection.querySelector(".gs-library-browser");
+    if (!browser) {
+      browser = document.createElement("div");
+      browser.className = "gs-library-browser";
+      const kicker = document.createElement("p");
+      kicker.className = "gs-library-kicker";
+      kicker.textContent = "\u5206\u96c6\u95b1\u8b80";
+      const heading = document.createElement("h3");
+      heading.className = "gs-library-heading";
+      heading.textContent = "\u5148\u9078\u8a69\u96c6\uff0c\u518d\u9078\u6587\u9ad4";
+      browser.append(
+        kicker,
+        heading,
+        buildFilterRow("\u8a69\u96c6", [...collectionOrder, "\u5168\u90e8\u8a69\u96c6"], "collection"),
+        buildFilterRow("\u6587\u9ad4", ["\u5168\u90e8", "\u8a69\u8a5e", "\u6563\u6587"], "type"),
+      );
+      const result = document.createElement("p");
+      result.className = "gs-library-result";
+      browser.append(result);
+      poemGrid.before(browser);
+    }
+
+    const essaySection = document.querySelector("#essays");
+    const sourceEssays = Array.from(essaySection?.querySelectorAll("article") || []);
+    if (essaySection) essaySection.classList.add("gs-essays-integrated");
+    let proseGrid = poemSection.querySelector(".gs-library-prose-grid");
+    if (!proseGrid) {
+      proseGrid = document.createElement("div");
+      proseGrid.className = "gs-library-prose-grid";
+      poemGrid.after(proseGrid);
+    }
+    const sourceSignature = sourceEssays.map((card) => card.querySelector("h3")?.textContent.trim()).join("|");
+    if (proseGrid.dataset.gsSourceSignature !== sourceSignature) {
+      proseGrid.replaceChildren();
+      sourceEssays.forEach((sourceCard) => {
+        const clone = sourceCard.cloneNode(true);
+        clone.dataset.gsWorkType = "\u6563\u6587";
+        clone.dataset.gsCollection = getCardCollection(sourceCard);
+        clone.addEventListener("click", (event) => {
+          event.preventDefault();
+          sourceCard.click();
+        });
+        proseGrid.append(clone);
+      });
+      proseGrid.dataset.gsSourceSignature = sourceSignature;
+    }
+    let empty = poemSection.querySelector(".gs-library-empty");
+    if (!empty) {
+      empty = document.createElement("p");
+      empty.className = "gs-library-empty";
+      empty.textContent = "\u9019\u500b\u5206\u985e\u76ee\u524d\u9084\u6c92\u6709\u6536\u9304\u4f5c\u54c1\u3002";
+      proseGrid.after(empty);
+    }
+    applyLibraryFilters();
+  }
+
+  function visiblePoemTitle(root = document) {
+    return Array.from(root.querySelectorAll("h1,h2,h3"))
+      .filter((item) => item.getClientRects().length > 0 && illustrations.has(item.textContent.trim()))
+      .at(-1);
+  }
+
+  function closestFixedOverlay(element) {
+    let current = element;
+    while (current && current !== document.body) {
+      if (getComputedStyle(current).position === "fixed") return current;
+      current = current.parentElement;
+    }
+    return element.closest?.('[role="dialog"]') || document.body;
+  }
+
+  function showShareToast(message) {
+    let toast = document.querySelector(".gs-share-toast");
+    if (!toast) {
+      toast = document.createElement("div");
+      toast.className = "gs-share-toast";
+      toast.setAttribute("role", "status");
+      document.body.append(toast);
+    }
+    toast.textContent = message;
+    requestAnimationFrame(() => toast.classList.add("is-visible"));
+    window.clearTimeout(showShareToast.timer);
+    showShareToast.timer = window.setTimeout(() => toast.classList.remove("is-visible"), 2600);
+  }
+
+  async function sharePoemWithIllustration(button) {
+    const overlay = closestFixedOverlay(button);
+    const titleElement = visiblePoemTitle(overlay);
+    const title = titleElement?.textContent.trim() || activeTitle;
+    const imagePath = illustrations.get(title);
+    if (!title || !imagePath) return;
+    const poemLines = Array.from(overlay.querySelectorAll("p"))
+      .filter((item) => item.getClientRects().length > 0)
+      .map((item) => item.textContent.trim())
+      .filter((text) => text && !text.includes("\u7559\u4e0b\u56de\u8072") && !text.startsWith("\u2014\u2014"));
+    const text = `\u300a${title}\u300b \u90ed\u5d07\u57ce\n\n${poemLines.join("\n\n")}`;
+    let shareUrl = window.location.href;
+    try {
+      shareUrl = `${window.parent.location.origin}/#collection`;
+    } catch (_) {}
+    const absoluteImageUrl = new URL(imagePath, window.location.href).href;
+    try {
+      const response = await fetch(absoluteImageUrl);
+      if (!response.ok) throw new Error("image unavailable");
+      const blob = await response.blob();
+      const extension = blob.type.includes("jpeg") ? "jpg" : "png";
+      const safeTitle = title.replace(/[\\/:*?"<>|]/g, "-");
+      const file = new File([blob], `${safeTitle}-\u6c34\u58a8\u756b.${extension}`, { type: blob.type || "image/png" });
+      if (navigator.share && navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ title: `\u300a${title}\u300b`, text, files: [file] });
+        return;
+      }
+      if (navigator.share) {
+        await navigator.share({
+          title: `\u300a${title}\u300b`,
+          text: `${text}\n\n\u6c34\u58a8\u756b\uff1a${absoluteImageUrl}`,
+          url: shareUrl,
+        });
+        return;
+      }
+      await navigator.clipboard.writeText(`${text}\n\n${absoluteImageUrl}\n${shareUrl}`);
+      showShareToast("\u8a69\u6587\u3001\u6c34\u58a8\u756b\u9023\u7d50\u8207\u7db2\u7ad9\u5df2\u8907\u88fd");
+    } catch (error) {
+      if (error?.name === "AbortError") return;
+      try {
+        await navigator.clipboard.writeText(`${text}\n\n${absoluteImageUrl}\n${shareUrl}`);
+        showShareToast("\u8a69\u6587\u3001\u6c34\u58a8\u756b\u9023\u7d50\u8207\u7db2\u7ad9\u5df2\u8907\u88fd");
+      } catch (_) {
+        showShareToast("\u76ee\u524d\u7121\u6cd5\u958b\u555f\u5206\u4eab\uff0c\u8acb\u7a0d\u5f8c\u518d\u8a66");
+      }
+    } finally {
+      button.disabled = false;
+    }
+  }
+
+  function fixAwardModal() {
+    const figures = Array.from(document.querySelectorAll("#awards figure"));
+    if (!figures.length) return;
+    const records = figures.map((figure) => ({
+      title: figure.querySelector("p")?.textContent.trim() || figure.textContent.trim(),
+      src: figure.querySelector("img")?.src || "",
+    })).filter((record) => record.title && record.src);
+    const overlays = Array.from(document.querySelectorAll("body div")).filter((item) => {
+      const style = getComputedStyle(item);
+      return style.position === "fixed" && item.getClientRects().length > 0 && Number(style.zIndex || 0) >= 80;
+    });
+    overlays.forEach((overlay) => {
+      const record = records.find((item) => overlay.textContent.includes(item.title));
+      if (!record) return;
+      overlay.style.setProperty("overflow-y", "auto", "important");
+      overlay.style.setProperty("padding-top", "58px", "important");
+      let image = overlay.querySelector("img");
+      if (!image) {
+        image = document.createElement("img");
+        const caption = Array.from(overlay.querySelectorAll("p")).find((item) => item.textContent.includes(record.title));
+        if (caption) caption.before(image);
+        else overlay.prepend(image);
+      }
+      image.classList.add("gs-award-modal-image");
+      image.alt ||= record.title;
+      const useFallback = () => {
+        if (image.src !== record.src) image.src = record.src;
+      };
+      if (!image.dataset.gsAwardFallback) {
+        image.dataset.gsAwardFallback = "1";
+        image.addEventListener("error", useFallback);
+        window.setTimeout(() => {
+          if (!image.complete || image.naturalWidth === 0) useFallback();
+        }, 900);
+      }
+      if (!image.getAttribute("src")) useFallback();
+    });
+  }
+
   function goTop() {
     window.scrollTo({ top: 0, behavior: "smooth" });
     document.scrollingElement?.scrollTo({ top: 0, behavior: "smooth" });
@@ -452,6 +854,38 @@
   });
 
   document.addEventListener("click", (event) => {
+    const filterButton = event.target.closest?.(".gs-library-filter");
+    if (filterButton) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      if (filterButton.dataset.gsFilterKind === "collection") {
+        activeCollection = filterButton.dataset.gsFilterValue;
+      } else {
+        activeWorkType = filterButton.dataset.gsFilterValue;
+      }
+      applyLibraryFilters();
+      return;
+    }
+    const shareButton = event.target.closest?.("button");
+    if (shareButton && shareButton.textContent.includes("\u5206\u4eab\u9019\u9996\u8a69")) {
+      const title = visiblePoemTitle(closestFixedOverlay(shareButton))?.textContent.trim() || activeTitle;
+      if (illustrations.has(title)) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        shareButton.disabled = true;
+        sharePoemWithIllustration(shareButton);
+        return;
+      }
+    }
+    const essayNav = event.target.closest?.('a[href="#essays"]');
+    if (essayNav) {
+      event.preventDefault();
+      activeCollection = "\u8015\u820d\u96c6";
+      activeWorkType = "\u6563\u6587";
+      mountLibraryBrowser();
+      document.querySelector("#poems")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
     const card = event.target.closest?.("#poems article");
     const title = card?.querySelector("h3")?.textContent.trim();
     if (!title || !illustrations.has(title)) return;
@@ -481,4 +915,6 @@
   window.setInterval(mountModalIllustration, 250);
   window.setInterval(styleMasthead, 250);
   window.setInterval(styleHeroTitle, 250);
+  window.setInterval(mountLibraryBrowser, 400);
+  window.setInterval(fixAwardModal, 300);
 })();
