@@ -4,6 +4,7 @@ const petals = document.querySelector("#petals");
 const loader = document.querySelector("#site-loader");
 const loaderStartedAt = Date.now();
 let loaderDismissed = false;
+let lastGoTopActivation = 0;
 
 function dismissLoader() {
   if (loaderDismissed) return;
@@ -35,7 +36,30 @@ window.addEventListener("message", (event) => {
   }
 });
 
-goTop.addEventListener("click", () => {
+function scrollFrameToTop() {
+  const frameWindow = frame.contentWindow;
+  const frameDocument = frame.contentDocument;
+  frameWindow?.scrollTo({ top: 0, left: 0, behavior: "smooth" });
+  frameWindow?.postMessage({ type: "gs-go-top" }, "*");
+  if (!frameDocument) return;
+  [frameDocument.scrollingElement, frameDocument.documentElement, frameDocument.body]
+    .filter(Boolean)
+    .forEach((element) => element.scrollTo?.({ top: 0, left: 0, behavior: "smooth" }));
+  window.setTimeout(() => {
+    frameWindow?.scrollTo(0, 0);
+    [frameDocument.scrollingElement, frameDocument.documentElement, frameDocument.body]
+      .filter(Boolean)
+      .forEach((element) => {
+        element.scrollTop = 0;
+        element.scrollLeft = 0;
+      });
+  }, 520);
+}
+
+function activateGoTop(event) {
+  if (Date.now() - lastGoTopActivation < 500) return;
+  lastGoTopActivation = Date.now();
+  event?.preventDefault();
   petals.replaceChildren();
   for (let index = 0; index < 16; index += 1) {
     const petal = document.createElement("span");
@@ -46,7 +70,10 @@ goTop.addEventListener("click", () => {
     petal.style.setProperty("--delay", `${Math.random() * .45}s`);
     petals.append(petal);
   }
-  frame.contentWindow?.postMessage({ type: "gs-go-top" }, "*");
-});
+  scrollFrameToTop();
+}
+
+goTop.addEventListener("click", activateGoTop);
+goTop.addEventListener("touchend", activateGoTop, { passive: false });
 
 prepareCollection();

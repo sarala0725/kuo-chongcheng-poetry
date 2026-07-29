@@ -1,7 +1,7 @@
 (() => {
   const illustrations = new Map([
     ["\u864e\u982d\u57e4\u5609\u5e74\u83ef\u6703", "assets/ink-wash/hutoupi-carnival.png"],
-    ["\u588a\u4e01\u570b\u5bb6\u516c\u5712\u4e4b\u65c5", "assets/ink-wash/kenting-journey.png"],
+    ["\u58be\u4e01\u570b\u5bb6\u516c\u5712\u4e4b\u65c5", "assets/ink-wash/kenting-journey.png"],
     ["\u8cde\u84ee", "assets/ink-wash/lotus-appreciation.png"],
     ["\u5357\u7e23\u862d\u82d1", "assets/ink-wash/nankun-orchid-garden.png"],
     ["\u570b\u969b\u7cd6\u679c\u6587\u5316\u7bc0\u8a8c\u76db", "assets/ink-wash/candy-festival.png"],
@@ -15,7 +15,7 @@
     ["\u5851\u81a0\u82b1", "assets/ink-wash/plastic-flower.png"],
     ["\u53f0\u5357\u5ef6\u5e73\u90e1\u738b\u7960", "assets/ink-wash/yanping-shrine.png"],
     ["\u5c4f\u6771\u6d77\u6d0b\u751f\u7269\u535a\u7269\u9928", "assets/ink-wash/pingtung-marine-museum.png"],
-    ["\u588a\u4e01\u570b\u5bb6\u516c\u5712", "assets/ink-wash/kenting-national-park.png"],
+    ["\u58be\u4e01\u570b\u5bb6\u516c\u5712", "assets/ink-wash/kenting-national-park.png"],
     ["\u6771\u53f0\u884c", "assets/ink-wash/eastern-taiwan-journey.png"],
     ["\u5357\u6a6b\u9053\u4e2d", "assets/ink-wash/southern-cross-island-road.png"],
     ["\u4eac\u676d\u904b\u6cb3", "assets/ink-wash/grand-canal.png"],
@@ -124,6 +124,7 @@
         height: clamp(82px, 15vw, 168px) !important;
         flex: 0 1 auto;
       }
+      header > nav button { display: none !important; }
       .gs-hero-svg {
         display: block;
         width: 100%;
@@ -277,8 +278,18 @@
           overflow-wrap: anywhere !important;
         }
         .gs-calligraphy-hero .gs-hero-vector-slot {
-          width: 19.5% !important;
+          width: 20% !important;
           height: clamp(70px, 22vw, 90px) !important;
+          min-width: 0 !important;
+          flex: 0 1 20% !important;
+        }
+        #hw-hero {
+          display: flex !important;
+          flex-wrap: nowrap !important;
+          justify-content: center !important;
+          gap: 0 !important;
+          width: 100% !important;
+          white-space: nowrap !important;
         }
         .gs-hero-svg {
           filter: none !important;
@@ -456,6 +467,7 @@
     const style = document.createElement("style");
     style.id = "gs-library-style";
     style.textContent = `
+      header > nav button { display: none !important; }
       .gs-library-browser {
         grid-column: 1 / -1;
         margin: 30px 0 34px;
@@ -745,6 +757,92 @@
         animation: gs-reader-enter .45s ease both !important;
       }
       .gs-inline-reader-panel > button[title="\u95dc\u9589"] { display: none !important; }
+      .gs-poem-couplets {
+        display: grid !important;
+        gap: 1.1em;
+        width: max-content;
+        max-width: 100%;
+        margin-right: auto;
+        margin-left: auto;
+        overflow-x: auto;
+        padding: 4px 0 9px;
+        white-space: normal !important;
+        font-size: clamp(20px, 2.25vw, 25px) !important;
+        line-height: 1.85 !important;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+      }
+      .gs-poem-couplets::-webkit-scrollbar { display: none; }
+      .gs-poem-couplet {
+        display: grid;
+        grid-template-columns: repeat(2, max-content);
+        gap: clamp(24px, 4vw, 52px);
+        width: max-content;
+        min-width: max-content;
+      }
+      .gs-poem-line {
+        display: block;
+        flex: 0 0 auto;
+        white-space: nowrap;
+        letter-spacing: .035em;
+      }
+      .gs-poem-reader > h2 {
+        text-align: center !important;
+      }
+      .gs-poem-suite-reader > h2 {
+        font-size: clamp(32px, 5vw, 52px) !important;
+        line-height: 1.25 !important;
+      }
+      .gs-poem-suite-intro {
+        width: min(680px, 100%);
+        margin: 0 auto 40px;
+        padding: 0 0 23px;
+        border-bottom: 1px solid rgba(69, 80, 65, .16);
+        color: inherit;
+        font-family: inherit;
+        font-size: clamp(20px, 2.25vw, 25px);
+        line-height: 1.85;
+        text-align: left;
+      }
+      .gs-poem-suite-intro p { margin: 0 0 .8em; }
+      .gs-poem-suite-intro p:last-child { margin-bottom: 0; }
+      .gs-poem-suite-section {
+        width: max-content;
+        max-width: 100%;
+        margin: 0 auto 32px;
+      }
+      .gs-poem-suite-title {
+        margin: 0 0 34px;
+        color: #342f29;
+        font-family: inherit !important;
+        font-size: clamp(30px, 5vw, 42px) !important;
+        font-weight: 600;
+        line-height: 1.3;
+        letter-spacing: .06em;
+        text-align: center;
+      }
+      .gs-poem-suite-section .gs-poem-couplets {
+        width: 100%;
+        max-width: 100%;
+        margin-right: 0;
+        margin-left: 0;
+        overflow: visible;
+        gap: .62em;
+      }
+      .gs-poem-suite-section .gs-poem-couplet {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: .62em;
+        width: 100%;
+        min-width: 0;
+      }
+      .gs-poem-suite-section .gs-poem-line {
+        width: 100%;
+        white-space: normal;
+        overflow-wrap: anywhere;
+      }
+      .gs-poem-couplet.is-single { justify-content: flex-start; }
       .gs-next-work {
         appearance: none;
         display: grid;
@@ -817,6 +915,212 @@
         opacity: 1 !important;
         visibility: visible !important;
       }
+      .gs-awards-drag-track {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        gap: clamp(16px, 2.2vw, 28px) !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        padding-bottom: 12px !important;
+        cursor: grab;
+        scroll-snap-type: x proximity;
+        scrollbar-width: none !important;
+        -ms-overflow-style: none;
+        touch-action: pan-y pinch-zoom;
+        -webkit-overflow-scrolling: touch;
+      }
+      .gs-awards-drag-track::-webkit-scrollbar { display: none !important; }
+      .gs-awards-drag-track.is-dragging {
+        cursor: grabbing;
+        scroll-snap-type: none;
+        user-select: none;
+      }
+      .gs-awards-drag-track > figure {
+        flex: 0 0 clamp(250px, 30vw, 330px) !important;
+        width: clamp(250px, 30vw, 330px) !important;
+        max-width: calc(100vw - 52px) !important;
+        scroll-snap-align: start;
+      }
+      .gs-awards-arrows {
+        position: relative;
+        z-index: 4;
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
+        height: 0;
+        padding: 0 8px;
+        pointer-events: none;
+        transform: translateY(calc(var(--gs-award-arrow-y, 180px) - 21px));
+      }
+      .gs-awards-arrow {
+        appearance: none;
+        display: grid;
+        width: 44px;
+        height: 48px;
+        place-items: center;
+        border: 0;
+        background: transparent;
+        color: #687669;
+        cursor: pointer;
+        pointer-events: auto;
+        transition: color .2s ease, transform .2s ease;
+      }
+      .gs-awards-arrow::before {
+        content: "";
+        display: block;
+        width: 14px;
+        height: 14px;
+        border-top: 2px solid currentColor;
+        border-right: 2px solid currentColor;
+        filter: drop-shadow(0 2px 4px rgba(53, 48, 40, .13));
+      }
+      .gs-awards-arrow:first-child::before { transform: rotate(-135deg); }
+      .gs-awards-arrow:last-child::before { transform: rotate(45deg); }
+      .gs-awards-arrow:hover {
+        color: #39483b;
+      }
+      .gs-awards-arrow:first-child:hover { transform: translateX(-3px); }
+      .gs-awards-arrow:last-child:hover { transform: translateX(3px); }
+      .gs-awards-arrow:disabled {
+        cursor: default;
+        opacity: .28;
+        transform: none;
+      }
+      .gs-visitor-counter {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 18px;
+        width: min(920px, calc(100% - 48px));
+        margin: 58px auto 34px;
+        padding: 25px clamp(20px, 4vw, 42px);
+        border-top: 1px solid rgba(82, 74, 62, .18);
+        border-bottom: 1px solid rgba(82, 74, 62, .13);
+        color: #756b5d;
+      }
+      .gs-visitor-seal {
+        display: grid;
+        width: 43px;
+        height: 43px;
+        place-items: center;
+        border: 1px solid rgba(133, 72, 55, .62);
+        color: #8a5144;
+        font-family: serif;
+        font-size: 12px;
+        line-height: 1.1;
+        letter-spacing: .08em;
+        text-align: center;
+        transform: rotate(-2deg);
+      }
+      .gs-visitor-copy { min-width: 0; }
+      .gs-visitor-kicker {
+        display: block;
+        margin-bottom: 5px;
+        color: #9a8f7e;
+        font-size: 10px;
+        letter-spacing: .26em;
+      }
+      .gs-visitor-label {
+        display: block;
+        color: #5c554c;
+        font-family: serif;
+        font-size: 15px;
+        letter-spacing: .16em;
+      }
+      .gs-visitor-value {
+        color: #474139;
+        font-family: Georgia, serif;
+        font-size: clamp(23px, 3vw, 31px);
+        font-variant-numeric: tabular-nums;
+        letter-spacing: .12em;
+        white-space: nowrap;
+      }
+      .gs-visitor-value.is-preview {
+        color: #8a8174;
+        font-family: var(--font-ui);
+        font-size: 12px;
+        letter-spacing: .16em;
+      }
+      .gs-inner-go-top {
+        appearance: none;
+        position: fixed;
+        z-index: 240;
+        right: 24px;
+        bottom: 28px;
+        display: grid;
+        width: 52px;
+        height: 52px;
+        place-items: center;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        cursor: pointer;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+        filter: drop-shadow(2px 4px 5px rgba(54,45,35,.2));
+        transition: transform .22s ease;
+      }
+      .gs-inner-go-top::before,
+      .gs-inner-go-top::after {
+        content: "";
+        position: absolute;
+        inset: 8px;
+        border: 1px solid rgba(139, 117, 82, .24);
+        border-radius: 50%;
+        opacity: 0;
+        pointer-events: none;
+      }
+      .gs-inner-go-top svg { display: block; width: 100%; overflow: visible; pointer-events: none; }
+      .gs-inner-go-petals { fill: #fffdf7; stroke: #d9d0c0; stroke-width: 1; transform-origin: 24px 24px; }
+      .gs-inner-go-heart { fill: #bd9659; }
+      .gs-inner-go-arrow { fill: none; stroke: #73614d; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+      .gs-inner-go-top:hover { transform: translateY(-4px) rotate(-8deg); }
+      .gs-inner-go-top.is-returning .gs-inner-go-petals { animation: gs-go-spin 1s cubic-bezier(.3,.62,.3,1) both; }
+      .gs-inner-go-top.is-returning::before { animation: gs-go-ripple 1.55s ease-out both; }
+      .gs-inner-go-top.is-returning::after { animation: gs-go-ripple 1.55s .28s ease-out both; }
+      .gs-return-petal {
+        position: fixed;
+        z-index: 239;
+        right: 31px;
+        bottom: 49px;
+        width: 11px;
+        height: 8px;
+        border: 1px solid rgba(190,179,158,.45);
+        border-radius: 70% 30% 70% 30%;
+        background: linear-gradient(135deg,#fff,#e8e1d3);
+        opacity: 0;
+        pointer-events: none;
+        filter: drop-shadow(0 3px 5px rgba(74, 61, 46, .1));
+        animation: gs-return-petal var(--duration) var(--delay) cubic-bezier(.18,.62,.28,1) forwards;
+      }
+      @keyframes gs-go-spin {
+        0% { transform: rotate(0deg) scale(1); }
+        50% { transform: rotate(180deg) scale(1.045); }
+        100% { transform: rotate(360deg) scale(1); }
+      }
+      @keyframes gs-go-ripple {
+        0% { opacity: 0; transform: scale(.68); }
+        18% { opacity: .38; }
+        100% { opacity: 0; transform: scale(2.15); }
+      }
+      @keyframes gs-return-petal {
+        0% { opacity: 0; translate: 0 0; rotate: 0deg; scale: .72; }
+        15% { opacity: .86; }
+        62% {
+          opacity: .68;
+          translate: var(--drift-x) var(--rise-y);
+          rotate: var(--mid-spin);
+          scale: 1;
+        }
+        100% {
+          opacity: 0;
+          translate: var(--settle-x) var(--settle-y);
+          rotate: var(--spin);
+          scale: .82;
+        }
+      }
       @media (max-width: 700px) {
         .gs-library-browser {
           margin: 26px 0 26px;
@@ -853,10 +1157,55 @@
         .gs-inline-reader-panel {
           padding: 24px 2px 48px !important;
         }
+  .gs-poem-couplets {
+    gap: .9em;
+    width: max-content;
+    max-width: 100%;
+    margin-right: auto;
+    margin-left: auto;
+    font-size: clamp(13px, 4.2vw, 17px) !important;
+    line-height: 1.75 !important;
+  }
+        .gs-poem-couplet {
+          display: flex;
+          justify-content: flex-start;
+          gap: clamp(10px, 3vw, 17px);
+          width: max-content;
+        }
+        .gs-poem-suite-intro {
+          font-size: clamp(13px, 4.2vw, 17px);
+        }
         .gs-reader-nav { margin-bottom: 14px; }
         .gs-award-modal-image {
           max-width: calc(100vw - 30px) !important;
           max-height: calc(100dvh - 190px) !important;
+        }
+        .gs-awards-drag-track > figure {
+          flex-basis: min(78vw, 300px) !important;
+          width: min(78vw, 300px) !important;
+        }
+        .gs-awards-arrow { width: 40px; height: 44px; }
+        .gs-awards-arrows {
+          padding: 0 3px;
+          transform: translateY(calc(var(--gs-award-arrow-y, 160px) - 22px));
+        }
+        .gs-visitor-counter {
+          grid-template-columns: auto 1fr;
+          gap: 13px;
+          width: calc(100% - 40px);
+          margin-top: 42px;
+          padding: 20px 5px;
+        }
+        .gs-visitor-value {
+          grid-column: 2;
+          margin-top: -7px;
+          font-size: 24px;
+        }
+        .gs-inner-go-top {
+          right: 12px;
+          bottom: 14px;
+          width: 46px;
+          height: 46px;
         }
       }
     `;
@@ -1179,6 +1528,99 @@
     section?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
+  function appendCoupletRows(container, lines) {
+    for (let index = 0; index < lines.length; index += 2) {
+      const couplet = document.createElement("div");
+      couplet.className = "gs-poem-couplet";
+      if (!lines[index + 1]) couplet.classList.add("is-single");
+      [lines[index], lines[index + 1]].filter(Boolean).forEach((lineText) => {
+        const line = document.createElement("span");
+        line.className = "gs-poem-line";
+        line.textContent = lineText;
+        couplet.append(line);
+      });
+      container.append(couplet);
+    }
+  }
+
+  function formatPoemCouplets(panel) {
+    const content = Array.from(panel.querySelectorAll("div")).find((item) => {
+      return item.style.whiteSpace === "pre-line" && !item.closest(".gs-next-work");
+    });
+    if (!content || content.classList.contains("gs-poem-couplets")) return;
+    const title = panel.querySelector("h2")?.textContent.trim() || "";
+    const rawContent = content.textContent.trim();
+    panel.classList.add("gs-poem-reader");
+    if (title === "\u58be\u4e01\u570b\u5bb6\u516c\u5712\u4e4b\u65c5") {
+      const blocks = rawContent
+        .replace(/\r/g, "")
+        .split(/(?=[\u4e00\u4e8c\u4e09\u56db\u4e94\u516d]\u3001)/)
+        .map((block) => block.trim())
+        .filter(Boolean);
+      content.classList.add("gs-poem-suite");
+      panel.classList.add("gs-poem-suite-reader");
+      content.replaceChildren();
+      blocks.shift();
+      const introLines = [
+        "\u65bc\u6c11\u570b\u4e5d\u5341\u4e03\u5e74\u51ac\u81f3\u5f8c\u4e00\u65e5",
+        "\u6960\u897f\u793e\u5340\u767c\u5c55\u5354\u6703\u7531\u738b\u7406\u4e8b\u9577\u745c\u82f1\u8001\u5e2b\u7d44\u5718\u5f80\u58be\u4e01\u4f5c\u4e8c\u65e5\u4e4b\u904a\u3002\u5433\u96d6\u975e\u6703\u54e1\uff0c\u97f3\u611f\u58be\u4e01\u53ca\u6709\u675f\u5343\u7a2e\u4e4b\u71b1\u5e36\u6797\u6728\u82b1\u8349\u65bc\u4e00\u5712\uff0c\u53ef\u8b02\u662f\u4e00\u90e8\u690d\u7269\u6d3b\u5b57\u5178\u3002\u5c71\u6d77\u76f8\u4f9d\u3001\u666f\u9ede\u76f8\u9023\u3001\u5c65\u53bb\u4e0d\u53ad\u3001\u4f9d\u7136\u53c3\u52a0\u3002\u4f5c\u8a69\u6578\u9996\uff0c\u4ee5\u8a8c\u5176\u52dd",
+      ];
+      if (introLines.length) {
+        const intro = document.createElement("div");
+        intro.className = "gs-poem-suite-intro";
+        introLines.forEach((introText) => {
+          const paragraph = document.createElement("p");
+          paragraph.textContent = introText;
+          intro.append(paragraph);
+        });
+        content.append(intro);
+      }
+      blocks.forEach((block) => {
+        const blockLines = block
+          .split(/[\n\u3000]+/)
+          .map((line) => line.trim())
+          .filter(Boolean);
+        if (!blockLines.length) return;
+        const section = document.createElement("section");
+        section.className = "gs-poem-suite-section";
+        const heading = document.createElement("h3");
+        heading.className = "gs-poem-suite-title";
+        heading.textContent = blockLines.shift();
+        const verses = blockLines.join("\n")
+          .split(/[\n\u3000]+/)
+          .map((line) => line.trim())
+          .filter(Boolean);
+        const couplets = document.createElement("div");
+        couplets.className = "gs-poem-couplets";
+        appendCoupletRows(couplets, verses);
+        section.append(heading, couplets);
+        content.append(section);
+      });
+      return;
+    }
+    const lines = rawContent
+      .split(/[\n\u3000]+/)
+      .map((line) => line.trim())
+      .filter(Boolean);
+    if (lines.length < 2) return;
+    content.classList.add("gs-poem-couplets");
+    content.replaceChildren();
+    appendCoupletRows(content, lines);
+  }
+
+  function mountPanelIllustration(panel, titleText) {
+    const imagePath = illustrations.get(titleText);
+    const title = Array.from(panel.querySelectorAll("h1,h2,h3"))
+      .find((item) => item.textContent.trim() === titleText);
+    if (!imagePath || !title || panel.querySelector(".gs-modal-ink")) return;
+    const image = document.createElement("img");
+    image.className = "gs-modal-ink";
+    image.src = imagePath;
+    image.alt = `\u300a${titleText}\u300b\u6c34\u58a8\u63d2\u756b`;
+    image.style.cssText = "display:block;width:100%;max-height:340px;aspect-ratio:3/2;object-fit:cover;margin:0 0 22px;border:1px solid rgba(52,48,42,.12);box-shadow:0 8px 18px rgba(52,48,42,.10);";
+    title.before(image);
+  }
+
   function mountInlineReader() {
     const poemSection = document.querySelector("#poems");
     if (!poemSection) return;
@@ -1233,6 +1675,8 @@
     const panelClone = panel.cloneNode(true);
     panelClone.classList.add("gs-inline-reader-panel");
     panelClone.querySelector('button[title="\u95dc\u9589"]')?.remove();
+    formatPoemCouplets(panelClone);
+    mountPanelIllustration(panelClone, pendingReaderTitle);
     const originalActionButtons = Array.from(panel.querySelectorAll("button"))
       .filter((button) => !button.title);
     Array.from(panelClone.querySelectorAll("button")).forEach((cloneButton) => {
@@ -1301,10 +1745,27 @@
     const title = titleElement?.textContent.trim() || activeTitle;
     const imagePath = illustrations.get(title);
     if (!title || !imagePath) return;
-    const poemLines = Array.from(overlay.querySelectorAll("p"))
-      .filter((item) => item.getClientRects().length > 0)
-      .map((item) => item.textContent.trim())
-      .filter((text) => text && !text.includes("\u7559\u4e0b\u56de\u8072") && !text.startsWith("\u2014\u2014"));
+    const suite = overlay.querySelector(".gs-poem-suite");
+    const formattedPoem = suite
+      ? [
+          Array.from(suite.querySelectorAll(".gs-poem-suite-intro p")).map((line) => line.textContent.trim()).join("\n"),
+          ...Array.from(suite.querySelectorAll(".gs-poem-suite-section")).map((section) => {
+            const heading = section.querySelector(".gs-poem-suite-title")?.textContent.trim() || "";
+            const verses = Array.from(section.querySelectorAll(".gs-poem-couplet"))
+              .map((row) => Array.from(row.querySelectorAll(".gs-poem-line")).map((line) => line.textContent.trim()).join("\u3000"))
+              .join("\n");
+            return `${heading}\n${verses}`.trim();
+          }),
+        ].filter(Boolean).join("\n\n")
+      : Array.from(overlay.querySelectorAll(".gs-poem-couplet"))
+        .map((row) => Array.from(row.querySelectorAll(".gs-poem-line")).map((line) => line.textContent.trim()).join("\u3000"))
+        .join("\n");
+    const poemLines = formattedPoem
+      ? [formattedPoem]
+      : Array.from(overlay.querySelectorAll("p"))
+        .filter((item) => item.getClientRects().length > 0)
+        .map((item) => item.textContent.trim())
+        .filter((text) => text && !text.includes("\u7559\u4e0b\u56de\u8072") && !text.startsWith("\u2014\u2014"));
     const text = `\u300a${title}\u300b \u90ed\u5d07\u57ce\n\n${poemLines.join("\n\n")}`;
     let shareUrl = window.location.href;
     try {
@@ -1384,9 +1845,252 @@
     });
   }
 
+  function removeAccountControls() {
+    try {
+      localStorage.setItem("gs_loggedIn", "1");
+    } catch (_) {}
+    document.querySelectorAll("header button").forEach((button) => {
+      if (/(\u767b\u5165|\u767b\u51fa)/.test(button.textContent)) button.remove();
+    });
+  }
+
+  function removeMastheadAuthor() {
+    const masthead = document.querySelector("header > a");
+    if (!masthead) return;
+    masthead.querySelectorAll("*").forEach((item) => {
+      if (!item.children.length && item.textContent.trim() === "\u90ed\u5d07\u57ce") item.remove();
+    });
+    Array.from(masthead.childNodes).forEach((node) => {
+      if (node.nodeType !== Node.TEXT_NODE || !node.textContent.includes("\u90ed\u5d07\u57ce")) return;
+      node.textContent = node.textContent.replace(/\u90ed\u5d07\u57ce/g, "");
+    });
+  }
+
+  function setupAwardDrag() {
+    const figures = Array.from(document.querySelectorAll("#awards figure"));
+    const track = figures[0]?.parentElement;
+    if (!track || track.dataset.gsDragReady === "1") return;
+    track.dataset.gsDragReady = "1";
+    track.classList.add("gs-awards-drag-track");
+    track.setAttribute("aria-label", "\u69ae\u8b7d\u734e\u72c0\uff0c\u53ef\u5de6\u53f3\u62d6\u66f3\u700f\u89bd");
+    let startX = 0;
+    let startScrollLeft = 0;
+    let moved = false;
+    let pointerActive = false;
+    let activePointerId = null;
+    let dragThreshold = 6;
+    let suppressClickUntil = 0;
+    track.addEventListener("pointerdown", (event) => {
+      if (event.pointerType === "mouse" && event.button !== 0) return;
+      startX = event.clientX;
+      startScrollLeft = track.scrollLeft;
+      moved = false;
+      pointerActive = true;
+      activePointerId = event.pointerId;
+      dragThreshold = event.pointerType === "touch" ? 14 : 6;
+    });
+    track.addEventListener("pointermove", (event) => {
+      if (!pointerActive || event.pointerId !== activePointerId) return;
+      const distance = event.clientX - startX;
+      if (!moved && Math.abs(distance) > dragThreshold) {
+        moved = true;
+        track.classList.add("is-dragging");
+        track.setPointerCapture?.(event.pointerId);
+      }
+      if (moved) {
+        event.preventDefault();
+        track.scrollLeft = startScrollLeft - distance;
+      }
+    });
+    const finishDrag = (event) => {
+      if (!pointerActive || event.pointerId !== activePointerId) return;
+      pointerActive = false;
+      activePointerId = null;
+      track.classList.remove("is-dragging");
+      if (track.hasPointerCapture?.(event.pointerId)) track.releasePointerCapture(event.pointerId);
+      if (moved) suppressClickUntil = Date.now() + 350;
+    };
+    track.addEventListener("pointerup", finishDrag);
+    track.addEventListener("pointercancel", finishDrag);
+    track.addEventListener("click", (event) => {
+      if (Date.now() >= suppressClickUntil) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+    }, true);
+    const arrows = document.createElement("div");
+    arrows.className = "gs-awards-arrows";
+    const previous = document.createElement("button");
+    const next = document.createElement("button");
+    previous.type = next.type = "button";
+    previous.className = next.className = "gs-awards-arrow";
+    previous.setAttribute("aria-label", "\u4e0a\u4e00\u5f35\u734e\u72c0");
+    next.setAttribute("aria-label", "\u4e0b\u4e00\u5f35\u734e\u72c0");
+    const updateArrows = () => {
+      arrows.style.setProperty("--gs-award-arrow-y", `${Math.max(42, track.clientHeight / 2)}px`);
+      previous.disabled = track.scrollLeft <= 2;
+      next.disabled = track.scrollLeft + track.clientWidth >= track.scrollWidth - 2;
+    };
+    previous.addEventListener("click", () => {
+      track.scrollBy({ left: -Math.max(240, track.clientWidth * .78), behavior: "smooth" });
+    });
+    next.addEventListener("click", () => {
+      track.scrollBy({ left: Math.max(240, track.clientWidth * .78), behavior: "smooth" });
+    });
+    track.addEventListener("scroll", updateArrows, { passive: true });
+    arrows.append(previous, next);
+    track.before(arrows);
+    window.setTimeout(updateArrows, 0);
+    if ("ResizeObserver" in window) new ResizeObserver(updateArrows).observe(track);
+  }
+
+  async function loadVisitorCount(valueElement) {
+    if (valueElement.dataset.gsCountLoaded === "1") return;
+    valueElement.dataset.gsCountLoaded = "1";
+    if (location.protocol === "file:") {
+      valueElement.textContent = "\u672c\u6a5f\u9810\u89bd";
+      valueElement.classList.add("is-preview");
+      valueElement.closest(".gs-visitor-counter")?.setAttribute(
+        "title",
+        "\u6b63\u5f0f\u7db2\u5740\u4e0a\u7dda\u5f8c\u6703\u986f\u793a\u4e26\u7d2f\u8a08\u700f\u89bd\u4eba\u6b21"
+      );
+      return;
+    }
+    const productionHost = "kuo-chongcheng-poetry.vercel.app";
+    const sessionKey = "gs_visit_counted_2026";
+    let shouldIncrement = false;
+    try {
+      shouldIncrement = location.hostname === productionHost && sessionStorage.getItem(sessionKey) !== "1";
+    } catch (_) {
+      shouldIncrement = location.hostname === productionHost;
+    }
+    const action = shouldIncrement ? "up" : "";
+    const endpoint = `https://api.counterapi.dev/v1/kuo-chongcheng-poetry/visitors/${action}`;
+    try {
+      const response = await fetch(endpoint, { cache: "no-store" });
+      if (!response.ok) throw new Error("visitor counter unavailable");
+      const data = await response.json();
+      const count = Number(data.count ?? data.value ?? data);
+      if (!Number.isFinite(count)) throw new Error("visitor count missing");
+      valueElement.textContent = new Intl.NumberFormat("zh-TW", {
+        minimumIntegerDigits: 6,
+        useGrouping: false,
+      }).format(count);
+      if (shouldIncrement) {
+        try {
+          sessionStorage.setItem(sessionKey, "1");
+        } catch (_) {}
+      }
+    } catch (_) {
+      valueElement.textContent = "\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7";
+      valueElement.closest(".gs-visitor-counter")?.setAttribute("title", "\u700f\u89bd\u4eba\u6578\u66ab\u6642\u7121\u6cd5\u53d6\u5f97");
+    }
+  }
+
+  function mountVisitorCounter() {
+    if (document.querySelector(".gs-visitor-counter")) return;
+    const counter = document.createElement("aside");
+    counter.className = "gs-visitor-counter";
+    counter.setAttribute("aria-label", "\u7db2\u7ad9\u700f\u89bd\u4eba\u6578");
+    counter.innerHTML = `
+      <span class="gs-visitor-seal" aria-hidden="true">\u8a69<br>\u8de1</span>
+      <span class="gs-visitor-copy">
+        <span class="gs-visitor-kicker">ARCHIVE VISITS</span>
+        <span class="gs-visitor-label">\u5171\u8b80\u8a69\u6587\u4eba\u6b21</span>
+      </span>
+      <span class="gs-visitor-value" aria-live="polite">\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7</span>
+    `;
+    const footer = document.querySelector("footer");
+    if (footer) footer.before(counter);
+    else document.body.append(counter);
+    loadVisitorCount(counter.querySelector(".gs-visitor-value"));
+  }
+
+  function releaseGoTopPetals(button) {
+    document.querySelectorAll(".gs-return-petal").forEach((petal) => petal.remove());
+    button.classList.remove("is-returning");
+    void button.offsetWidth;
+    button.classList.add("is-returning");
+    for (let index = 0; index < 5; index += 1) {
+      const petal = document.createElement("span");
+      petal.className = "gs-return-petal";
+      const driftX = -38 + Math.random() * 72;
+      petal.style.setProperty("--drift-x", `${driftX}px`);
+      petal.style.setProperty("--rise-y", `${-58 - Math.random() * 58}px`);
+      petal.style.setProperty("--settle-x", `${driftX + (-10 + Math.random() * 20)}px`);
+      petal.style.setProperty("--settle-y", `${-32 - Math.random() * 34}px`);
+      petal.style.setProperty("--mid-spin", `${90 + Math.random() * 190}deg`);
+      petal.style.setProperty("--spin", `${260 + Math.random() * 360}deg`);
+      petal.style.setProperty("--duration", `${1.8 + Math.random() * 1.15}s`);
+      petal.style.setProperty("--delay", `${Math.random() * .38}s`);
+      document.body.append(petal);
+      window.setTimeout(() => petal.remove(), 3600);
+    }
+  }
+
+  function mountInnerGoTop() {
+    if (document.querySelector(".gs-inner-go-top")) return;
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "gs-inner-go-top";
+    button.setAttribute("aria-label", "\u56de\u5230\u9801\u9996");
+    button.setAttribute("title", "\u56de\u5230\u9801\u9996");
+    button.innerHTML = `
+      <svg viewBox="0 0 48 48" aria-hidden="true">
+        <g class="gs-inner-go-petals">
+          <ellipse cx="24" cy="12" rx="7" ry="11"/>
+          <ellipse cx="35.4" cy="20.3" rx="7" ry="11" transform="rotate(72 35.4 20.3)"/>
+          <ellipse cx="31.1" cy="33.7" rx="7" ry="11" transform="rotate(144 31.1 33.7)"/>
+          <ellipse cx="16.9" cy="33.7" rx="7" ry="11" transform="rotate(216 16.9 33.7)"/>
+          <ellipse cx="12.6" cy="20.3" rx="7" ry="11" transform="rotate(288 12.6 20.3)"/>
+        </g>
+        <circle class="gs-inner-go-heart" cx="24" cy="24" r="4"/>
+        <path class="gs-inner-go-arrow" d="M24 30V19M19.5 23.5 24 19l4.5 4.5"/>
+      </svg>
+    `;
+    button.addEventListener("click", () => {
+      releaseGoTopPetals(button);
+      goTop();
+    });
+    document.body.append(button);
+  }
+
   function goTop() {
     window.scrollTo({ top: 0, behavior: "smooth" });
-    document.scrollingElement?.scrollTo({ top: 0, behavior: "smooth" });
+    const scrollables = [
+      document.scrollingElement,
+      document.documentElement,
+      document.body,
+      ...Array.from(document.querySelectorAll("*")).filter((item) => (
+        item.scrollTop > 0 && item.scrollHeight > item.clientHeight + 2
+      )),
+    ].filter(Boolean);
+    scrollables.forEach((item) => item.scrollTo?.({ top: 0, left: 0, behavior: "smooth" }));
+    window.setTimeout(() => {
+      window.scrollTo(0, 0);
+      scrollables.forEach((item) => {
+        item.scrollTop = 0;
+        item.scrollLeft = 0;
+      });
+    }, 520);
+  }
+
+  function bindParentGoTop() {
+    let parentButton;
+    try {
+      parentButton = window.parent?.document?.querySelector("#go-top");
+    } catch (_) {
+      return;
+    }
+    if (!parentButton || parentButton.dataset.gsFrameGoTop === "1") return;
+    parentButton.dataset.gsFrameGoTop = "1";
+    let lastActivation = 0;
+    const activate = () => {
+      if (Date.now() - lastActivation < 450) return;
+      lastActivation = Date.now();
+      goTop();
+    };
+    parentButton.addEventListener("click", activate);
+    parentButton.addEventListener("touchend", activate, { passive: true });
   }
 
   window.addEventListener("message", (event) => {
@@ -1506,4 +2210,10 @@
   window.setInterval(mountLibraryBrowser, 400);
   window.setInterval(mountInlineReader, 120);
   window.setInterval(fixAwardModal, 300);
+  window.setInterval(setupAwardDrag, 500);
+  window.setInterval(mountVisitorCounter, 700);
+  window.setInterval(removeAccountControls, 500);
+  window.setInterval(removeMastheadAuthor, 500);
+  window.setInterval(bindParentGoTop, 500);
+  window.setInterval(mountInnerGoTop, 500);
 })();
