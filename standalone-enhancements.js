@@ -2024,10 +2024,14 @@
     }
     const action = shouldIncrement ? "up" : "";
     const endpoint = `https://api.counterapi.dev/v1/kuo-chongcheng-poetry/visitors/${action}`;
-    const controller = new AbortController();
-    const timeout = window.setTimeout(() => controller.abort(), 12000);
+    let timeout = 0;
     try {
-      const response = await fetch(endpoint, { cache: "no-store", signal: controller.signal });
+      const response = await Promise.race([
+        fetch(endpoint, { cache: "no-store" }),
+        new Promise((_, reject) => {
+          timeout = window.setTimeout(() => reject(new Error("visitor counter timed out")), 12000);
+        }),
+      ]);
       if (!response.ok) throw new Error("visitor counter unavailable");
       const data = await response.json();
       const count = Number(data.count ?? data.value ?? data);
