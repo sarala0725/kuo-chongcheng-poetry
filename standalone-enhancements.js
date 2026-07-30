@@ -63,6 +63,24 @@
   let pendingReaderTitle = "";
   let pendingReaderCollection = "";
   let activeReaderModal = null;
+  let manuscriptIndex = 0;
+  let manuscriptTransitioning = false;
+  let manuscriptAutoplayTimer = 0;
+  let manuscriptAutoplayPaused = false;
+  let manuscriptInView = false;
+  const manuscriptPages = [
+    { file: "LINE_ALBUM_2026730_260730_1.jpg", kind: "詩稿", title: "楠西江家古厝・楠西春望", note: "兩首詩並列於一紙，保留最初落筆的呼吸。" },
+    { file: "LINE_ALBUM_2026730_260730_17.jpg", kind: "吟會稿紙", title: "詩社吟稿", note: "紅框稿紙與端整墨跡，留下昔日詩會的正式氣息。" },
+    { file: "LINE_ALBUM_2026730_260730_6.jpg", kind: "文稿", title: "自述長稿", note: "格紙上的長篇手書，字裡行間可見反覆斟酌。" },
+    { file: "LINE_ALBUM_2026730_260730_14.jpg", kind: "詩稿", title: "壬申中秋", note: "舊紙與摺線相疊，像一枚被保存下來的月色。" },
+    { file: "LINE_ALBUM_2026730_260730_5.jpg", kind: "剪報", title: "詩集獲獎剪報", note: "兩則報導拼成一頁，記錄詩集走入眾人目光的時刻。" },
+    { file: "LINE_ALBUM_2026730_260730_2.jpg", kind: "詩稿", title: "龜丹溫泉・曾文水庫", note: "山水入詩，工整的直書排列留住旅途見聞。" },
+    { file: "LINE_ALBUM_2026730_260730_18.jpg", kind: "詩稿合頁", title: "苦熱・鄉土記事", note: "兩張手稿同框，像翻開書桌上尚未收起的一疊詩頁。" },
+    { file: "LINE_ALBUM_2026730_260730_3.jpg", kind: "詩稿", title: "丙戌新春感懷・凌寒梅", note: "新歲與寒梅相映，是一頁清勁的節令詩稿。" },
+    { file: "LINE_ALBUM_2026730_260730_15.jpg", kind: "田園詩稿", title: "楠西鄉村曲", note: "較自在的筆勢，寫下村路、果園與日常景色。" },
+    { file: "LINE_ALBUM_2026730_260730_7.jpg", kind: "編輯手跡", title: "玉山頌・詩集編輯說明", note: "詩作與編輯文字並置，看見一部詩集成形前的思路。" },
+    { file: "LINE_ALBUM_2026730_260730_4.jpg", kind: "手稿合頁", title: "耕舍手稿一隅", note: "以兩頁並陳作結，像離開書桌前最後回望一次。" },
+  ];
   const collectionOrder = [
     "\u8015\u820d\u96c6",
     "\u7389\u5dba\u96c6",
@@ -2097,6 +2115,543 @@
     loadVisitorCount(counter.querySelector(".gs-visitor-value"));
   }
 
+  function ensureManuscriptStyle() {
+    if (document.getElementById("gs-manuscript-style")) return;
+    const style = document.createElement("style");
+    style.id = "gs-manuscript-style";
+    style.textContent = `
+      .gs-manuscripts {
+        position: relative;
+        padding: clamp(50px, 6vw, 78px) clamp(24px, 7vw, 92px);
+        overflow: hidden;
+        border-top: 1px solid rgba(72, 66, 56, .12);
+        background:
+          radial-gradient(circle at 16% 24%, rgba(120, 133, 112, .07), transparent 27%),
+          linear-gradient(180deg, rgba(250, 247, 237, .25), rgba(222, 213, 193, .12));
+        color: #37322c;
+      }
+      .gs-manuscript-inner {
+        position: relative;
+        z-index: 1;
+        width: min(860px, 100%);
+        margin: 0 auto;
+      }
+      .gs-manuscript-heading {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(260px, 420px);
+        align-items: end;
+        gap: clamp(28px, 5vw, 66px);
+        margin-bottom: clamp(32px, 5vw, 50px);
+      }
+      .gs-manuscript-kicker {
+        display: block;
+        margin-bottom: 13px;
+        color: #7d6a50;
+        font-size: 12px;
+        letter-spacing: .28em;
+      }
+      .gs-manuscript-heading h2 {
+        margin: 0;
+        font-family: var(--font-poetic, "Noto Serif TC", "Songti TC", serif) !important;
+        font-size: clamp(30px, 3.6vw, 42px) !important;
+        font-weight: 400;
+        letter-spacing: .08em;
+        line-height: 1.35;
+      }
+      .gs-manuscript-heading p {
+        margin: 0;
+        color: #766e62;
+        font-size: 15px;
+        letter-spacing: .06em;
+        line-height: 2;
+      }
+      .gs-manuscript-stage {
+        position: relative;
+        width: min(510px, 100%);
+        margin: 0 auto;
+        perspective: 1600px;
+      }
+      .gs-manuscript-stage::before,
+      .gs-manuscript-stage::after {
+        content: "";
+        position: absolute;
+        inset: 12px 17px -12px;
+        border: 1px solid rgba(77, 68, 56, .1);
+        background: rgba(232, 224, 207, .68);
+        box-shadow: 0 14px 34px rgba(69, 58, 43, .1);
+      }
+      .gs-manuscript-stage::before { transform: translate(-8px, 5px) rotate(-.55deg); }
+      .gs-manuscript-stage::after { transform: translate(7px, 3px) rotate(.42deg); }
+      .gs-manuscript-sheet {
+        position: relative;
+        z-index: 2;
+        margin: 0;
+        padding: clamp(18px, 3vw, 28px) clamp(18px, 3vw, 28px) 20px;
+        border: 1px solid rgba(75, 66, 54, .14);
+        background: rgba(246, 241, 226, .94);
+        box-shadow: 0 24px 60px rgba(68, 56, 40, .16);
+        transform-origin: 50% 50%;
+        transition: transform .58s ease, opacity .54s ease;
+        will-change: transform, opacity;
+      }
+      .gs-manuscript-sheet.is-slide-next {
+        opacity: 0;
+        transform: scale(.992);
+      }
+      .gs-manuscript-sheet.is-slide-prev {
+        opacity: 0;
+        transform: scale(.992);
+      }
+      .gs-manuscript-pen {
+        position: absolute;
+        z-index: 3;
+        right: clamp(-250px, -18vw, -196px);
+        bottom: 4px;
+        width: clamp(205px, 21vw, 282px);
+        height: auto;
+        opacity: .88;
+        filter:
+          saturate(.7)
+          sepia(.09)
+          drop-shadow(2px 3px 1px rgba(54, 44, 34, .25))
+          drop-shadow(6px 8px 5px rgba(54, 44, 34, .08));
+        pointer-events: none;
+        transform: rotate(5deg) scaleY(.965);
+        transform-origin: center;
+      }
+      .gs-manuscript-image-button {
+        appearance: none;
+        display: block;
+        width: 100%;
+        padding: 0;
+        overflow: hidden;
+        border: 0;
+        background: #e7dfcc;
+        cursor: zoom-in;
+      }
+      .gs-manuscript-image {
+        display: block;
+        width: 100%;
+        height: min(52vh, 450px);
+        min-height: 295px;
+        object-fit: contain;
+        background: #e7dfcc;
+        filter: saturate(.88) contrast(.98);
+      }
+      .gs-manuscript-sheet.is-settled .gs-manuscript-image {
+        animation: gs-manuscript-drift 7s cubic-bezier(.2,.55,.35,1) both;
+      }
+      @keyframes gs-manuscript-drift {
+        from { transform: scale(1); }
+        to { transform: scale(1.018); }
+      }
+      .gs-manuscript-caption {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 18px;
+        padding: 23px 2px 12px;
+        text-align: left;
+      }
+      .gs-manuscript-kind {
+        align-self: start;
+        padding: 5px 8px;
+        border: 1px solid rgba(91, 111, 87, .3);
+        color: #657666;
+        font-size: 11px;
+        letter-spacing: .14em;
+        white-space: nowrap;
+      }
+      .gs-manuscript-title {
+        display: block;
+        margin-bottom: 7px;
+        font-family: serif;
+        font-size: clamp(20px, 2.8vw, 28px);
+        letter-spacing: .08em;
+      }
+      .gs-manuscript-note {
+        display: block;
+        color: #837a6e;
+        font-size: 13px;
+        letter-spacing: .04em;
+        line-height: 1.7;
+      }
+      .gs-manuscript-controls {
+        position: relative;
+        z-index: 4;
+        display: grid;
+        grid-template-columns: 52px 1fr 52px;
+        align-items: center;
+        width: min(510px, 100%);
+        margin: 24px auto 0;
+      }
+      .gs-manuscript-arrow {
+        appearance: none;
+        display: grid;
+        width: 48px;
+        height: 48px;
+        place-items: center;
+        border: 1px solid rgba(76, 88, 73, .24);
+        border-radius: 50%;
+        background: rgba(247, 243, 232, .54);
+        color: #687969;
+        cursor: pointer;
+        font: 300 25px/1 serif;
+        transition: transform .2s ease, background .2s ease;
+      }
+      .gs-manuscript-arrow:hover {
+        background: rgba(247, 243, 232, .9);
+        transform: translateX(var(--arrow-shift));
+      }
+      .gs-manuscript-prev { --arrow-shift: -3px; }
+      .gs-manuscript-next { --arrow-shift: 3px; justify-self: end; }
+      .gs-manuscript-count {
+        display: block;
+        color: #786f63;
+        font-size: 12px;
+        letter-spacing: .18em;
+        text-align: center;
+      }
+      .gs-manuscript-status {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        align-items: center;
+        gap: 13px;
+        padding: 0 12px;
+      }
+      .gs-manuscript-progress {
+        position: relative;
+        display: block;
+        height: 1px;
+        margin-top: 8px;
+        overflow: hidden;
+        background: rgba(83, 94, 79, .19);
+      }
+      .gs-manuscript-progress::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: #788878;
+        transform: scaleX(0);
+        transform-origin: left center;
+      }
+      .gs-manuscript-status.is-playing .gs-manuscript-progress::after {
+        animation: gs-manuscript-progress 7s linear forwards;
+      }
+      @keyframes gs-manuscript-progress {
+        to { transform: scaleX(1); }
+      }
+      .gs-manuscript-play {
+        appearance: none;
+        display: grid;
+        width: 28px;
+        height: 28px;
+        place-items: center;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: #6c796c;
+        cursor: pointer;
+        font: 14px/1 sans-serif;
+      }
+      .gs-manuscript-lightbox {
+        position: fixed;
+        inset: 0;
+        z-index: 260;
+        display: grid;
+        grid-template-rows: 1fr auto;
+        padding: clamp(52px, 7vw, 80px) clamp(14px, 4vw, 48px) 22px;
+        background: rgba(30, 28, 24, .94);
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity .25s ease, visibility .25s ease;
+      }
+      .gs-manuscript-lightbox.is-open { opacity: 1; visibility: visible; }
+      .gs-manuscript-lightbox img {
+        align-self: center;
+        justify-self: center;
+        max-width: 100%;
+        max-height: calc(100dvh - 126px);
+        object-fit: contain;
+        user-select: none;
+      }
+      .gs-manuscript-lightbox-close {
+        appearance: none;
+        position: absolute;
+        top: 16px;
+        right: 18px;
+        width: 42px;
+        height: 42px;
+        border: 1px solid rgba(255,255,255,.28);
+        border-radius: 50%;
+        background: transparent;
+        color: #fff;
+        cursor: pointer;
+        font: 300 27px/1 sans-serif;
+      }
+      .gs-manuscript-lightbox-caption {
+        color: rgba(255,255,255,.76);
+        font-size: 13px;
+        letter-spacing: .12em;
+        text-align: center;
+      }
+      body.gs-manuscript-modal-open { overflow: hidden !important; }
+      @media (max-width: 700px) {
+        .gs-manuscripts { padding: 48px 20px 64px; }
+        .gs-manuscript-heading {
+          display: block;
+          margin-bottom: 38px;
+          text-align: center;
+        }
+        .gs-manuscript-heading h2 {
+          font-size: clamp(28px, 8vw, 34px) !important;
+          white-space: nowrap;
+        }
+        .gs-manuscript-heading p {
+          max-width: 31em;
+          margin: 20px auto 0;
+          font-size: 14px;
+        }
+        .gs-manuscript-sheet { padding: 13px 13px 16px; }
+        .gs-manuscript-image {
+          height: min(47vh, 380px);
+          min-height: 250px;
+        }
+        .gs-manuscript-pen {
+          right: -98px;
+          bottom: -62px;
+          width: 152px;
+          opacity: .78;
+          transform: rotate(8deg) scaleY(.965);
+        }
+        .gs-manuscript-caption {
+          display: block;
+          padding: 18px 4px 10px;
+        }
+        .gs-manuscript-kind {
+          display: inline-block;
+          margin-bottom: 12px;
+        }
+        .gs-manuscript-title { font-size: 22px; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .gs-manuscript-sheet,
+        .gs-manuscript-lightbox { transition-duration: .01ms !important; }
+        .gs-manuscript-sheet.is-settled .gs-manuscript-image,
+        .gs-manuscript-status.is-playing .gs-manuscript-progress::after {
+          animation: none !important;
+        }
+      }
+    `;
+    document.head.append(style);
+  }
+
+  function manuscriptImagePath(page) {
+    return `assets/manuscripts/${page.file}`;
+  }
+
+  function preloadManuscripts() {
+    [-1, 1].forEach((offset) => {
+      const page = manuscriptPages[(manuscriptIndex + offset + manuscriptPages.length) % manuscriptPages.length];
+      const image = new Image();
+      image.src = manuscriptImagePath(page);
+    });
+  }
+
+  function renderManuscriptPage(section) {
+    const page = manuscriptPages[manuscriptIndex];
+    const image = section.querySelector(".gs-manuscript-image");
+    image.src = manuscriptImagePath(page);
+    image.alt = `${page.title}手稿`;
+    section.querySelector(".gs-manuscript-kind").textContent = page.kind;
+    section.querySelector(".gs-manuscript-title").textContent = page.title;
+    section.querySelector(".gs-manuscript-note").textContent = page.note;
+    section.querySelector(".gs-manuscript-count").textContent = `其 ${manuscriptIndex + 1}　／　共 ${manuscriptPages.length} 頁`;
+    section.querySelector(".gs-manuscript-image-button").setAttribute("aria-label", `放大查看${page.title}`);
+    const sheet = section.querySelector(".gs-manuscript-sheet");
+    sheet.classList.remove("is-settled");
+    void sheet.offsetWidth;
+    sheet.classList.add("is-settled");
+    preloadManuscripts();
+  }
+
+  function scheduleManuscriptAutoplay(section) {
+    window.clearTimeout(manuscriptAutoplayTimer);
+    const status = section.querySelector(".gs-manuscript-status");
+    const playButton = section.querySelector(".gs-manuscript-play");
+    const lightboxOpen = section.querySelector(".gs-manuscript-lightbox")?.classList.contains("is-open");
+    status.classList.toggle("is-playing", !manuscriptAutoplayPaused);
+    playButton.textContent = manuscriptAutoplayPaused ? "▶" : "Ⅱ";
+    playButton.setAttribute("aria-label", manuscriptAutoplayPaused ? "播放手稿幻燈片" : "暫停手稿幻燈片");
+    if (manuscriptAutoplayPaused || lightboxOpen || !manuscriptInView) {
+      status.classList.remove("is-playing");
+      return;
+    }
+    status.classList.remove("is-playing");
+    void status.offsetWidth;
+    status.classList.add("is-playing");
+    manuscriptAutoplayTimer = window.setTimeout(() => changeManuscript(section, 1), 7000);
+  }
+
+  function changeManuscript(section, direction) {
+    if (manuscriptTransitioning) return;
+    manuscriptTransitioning = true;
+    window.clearTimeout(manuscriptAutoplayTimer);
+    const sheet = section.querySelector(".gs-manuscript-sheet");
+    sheet.classList.remove("is-settled");
+    sheet.classList.add(direction > 0 ? "is-slide-next" : "is-slide-prev");
+    window.setTimeout(() => {
+      manuscriptIndex = (manuscriptIndex + direction + manuscriptPages.length) % manuscriptPages.length;
+      renderManuscriptPage(section);
+      sheet.classList.remove("is-slide-next", "is-slide-prev");
+      sheet.style.opacity = "0";
+      sheet.style.transform = "scale(1.006)";
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        sheet.style.opacity = "";
+        sheet.style.transform = "";
+        window.setTimeout(() => {
+          manuscriptTransitioning = false;
+          scheduleManuscriptAutoplay(section);
+        }, 580);
+      }));
+    }, 540);
+  }
+
+  function openManuscriptLightbox(section) {
+    window.clearTimeout(manuscriptAutoplayTimer);
+    section.querySelector(".gs-manuscript-status")?.classList.remove("is-playing");
+    const page = manuscriptPages[manuscriptIndex];
+    const lightbox = section.querySelector(".gs-manuscript-lightbox");
+    const image = lightbox.querySelector("img");
+    image.src = manuscriptImagePath(page);
+    image.alt = `${page.title}手稿放大圖`;
+    lightbox.querySelector(".gs-manuscript-lightbox-caption").textContent = `${page.kind}・${page.title}`;
+    lightbox.classList.add("is-open");
+    lightbox.setAttribute("aria-hidden", "false");
+    document.body.classList.add("gs-manuscript-modal-open");
+    lightbox.querySelector(".gs-manuscript-lightbox-close").focus();
+  }
+
+  function closeManuscriptLightbox(section) {
+    const lightbox = section.querySelector(".gs-manuscript-lightbox");
+    lightbox.classList.remove("is-open");
+    lightbox.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("gs-manuscript-modal-open");
+    scheduleManuscriptAutoplay(section);
+  }
+
+  function setupManuscriptInteractions(section) {
+    if (section.dataset.gsBound === "1") return;
+    section.dataset.gsBound = "1";
+    section.querySelector(".gs-manuscript-prev").addEventListener("click", () => changeManuscript(section, -1));
+    section.querySelector(".gs-manuscript-next").addEventListener("click", () => changeManuscript(section, 1));
+    section.querySelector(".gs-manuscript-image-button").addEventListener("click", () => openManuscriptLightbox(section));
+    section.querySelector(".gs-manuscript-play").addEventListener("click", () => {
+      manuscriptAutoplayPaused = !manuscriptAutoplayPaused;
+      scheduleManuscriptAutoplay(section);
+    });
+    const lightbox = section.querySelector(".gs-manuscript-lightbox");
+    lightbox.addEventListener("click", (event) => {
+      if (event.target === lightbox || event.target.closest(".gs-manuscript-lightbox-close")) {
+        closeManuscriptLightbox(section);
+      }
+    });
+
+    if ("IntersectionObserver" in window) {
+      const observer = new IntersectionObserver((entries) => {
+        manuscriptInView = entries.some((entry) => entry.isIntersecting && entry.intersectionRatio >= .2);
+        if (manuscriptInView) {
+          scheduleManuscriptAutoplay(section);
+        } else {
+          window.clearTimeout(manuscriptAutoplayTimer);
+          section.querySelector(".gs-manuscript-status")?.classList.remove("is-playing");
+        }
+      }, { threshold: [0, .2, .45] });
+      observer.observe(section.querySelector(".gs-manuscript-stage"));
+    } else {
+      manuscriptInView = true;
+      scheduleManuscriptAutoplay(section);
+    }
+
+    document.addEventListener("keydown", (event) => {
+      if (!document.body.contains(section)) return;
+      const isOpen = lightbox.classList.contains("is-open");
+      if (event.key === "Escape" && isOpen) closeManuscriptLightbox(section);
+      if (!isOpen) return;
+      if (event.key === "ArrowLeft") changeManuscript(section, -1);
+      if (event.key === "ArrowRight") changeManuscript(section, 1);
+      if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+        window.setTimeout(() => openManuscriptLightbox(section), 580);
+      }
+    });
+  }
+
+  function ensureManuscriptNav() {
+    const awardLink = document.querySelector('header nav a[href="#awards"], nav a[href="#awards"]');
+    if (!awardLink || document.querySelector('a[href="#manuscripts"]')) return;
+    const link = awardLink.cloneNode(false);
+    link.href = "#manuscripts";
+    link.textContent = "手稿";
+    awardLink.before(link);
+  }
+
+  function mountManuscriptSection() {
+    ensureManuscriptStyle();
+    ensureManuscriptNav();
+    const awards = document.querySelector("#awards");
+    let section = document.querySelector("#manuscripts");
+    if (!awards) return;
+    if (!section) {
+      section = document.createElement("section");
+      section.id = "manuscripts";
+      section.className = "gs-manuscripts";
+      section.innerHTML = `
+        <div class="gs-manuscript-inner">
+          <header class="gs-manuscript-heading">
+            <div>
+              <span class="gs-manuscript-kicker">手稿珍藏</span>
+              <h2>紙上仍有他的手溫</h2>
+            </div>
+            <p>這些手稿不依年月排列，而循著墨色、紙痕與內容的節奏相遇。畫面會緩緩流轉，輕觸手稿即可放大閱讀。</p>
+          </header>
+          <div class="gs-manuscript-stage">
+            <figure class="gs-manuscript-sheet">
+              <button type="button" class="gs-manuscript-image-button">
+                <img class="gs-manuscript-image" loading="eager" decoding="async" alt="">
+              </button>
+              <figcaption class="gs-manuscript-caption">
+                <span class="gs-manuscript-kind"></span>
+                <span>
+                  <strong class="gs-manuscript-title"></strong>
+                  <span class="gs-manuscript-note"></span>
+                </span>
+              </figcaption>
+            </figure>
+            <img class="gs-manuscript-pen" src="assets/manuscript-pen.png?v=20260730k" alt="" aria-hidden="true">
+          </div>
+          <nav class="gs-manuscript-controls" aria-label="手稿翻頁">
+            <button type="button" class="gs-manuscript-arrow gs-manuscript-prev" aria-label="上一頁手稿">‹</button>
+            <span class="gs-manuscript-status">
+              <span>
+                <span class="gs-manuscript-count" aria-live="polite"></span>
+                <span class="gs-manuscript-progress" aria-hidden="true"></span>
+              </span>
+              <button type="button" class="gs-manuscript-play" aria-label="暫停手稿幻燈片">Ⅱ</button>
+            </span>
+            <button type="button" class="gs-manuscript-arrow gs-manuscript-next" aria-label="下一頁手稿">›</button>
+          </nav>
+        </div>
+        <div class="gs-manuscript-lightbox" role="dialog" aria-modal="true" aria-label="手稿放大閱讀" aria-hidden="true">
+          <button type="button" class="gs-manuscript-lightbox-close" aria-label="關閉手稿">×</button>
+          <img alt="">
+          <div class="gs-manuscript-lightbox-caption"></div>
+        </div>
+      `;
+      awards.before(section);
+      renderManuscriptPage(section);
+    }
+    setupManuscriptInteractions(section);
+  }
+
   function releaseGoTopPetals(button) {
     document.querySelectorAll(".gs-return-petal").forEach((petal) => petal.remove());
     button.classList.remove("is-returning");
@@ -2193,6 +2748,18 @@
   });
 
   document.addEventListener("click", (event) => {
+    const manuscriptControl = event.target.closest?.(".gs-manuscript-prev, .gs-manuscript-next");
+    if (manuscriptControl) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      const manuscriptSection = manuscriptControl.closest("#manuscripts");
+      if (!manuscriptSection) return;
+      changeManuscript(
+        manuscriptSection,
+        manuscriptControl.classList.contains("gs-manuscript-prev") ? -1 : 1
+      );
+      return;
+    }
     const nextWork = event.target.closest?.(".gs-next-work");
     if (nextWork) {
       event.preventDefault();
@@ -2303,6 +2870,7 @@
   window.setInterval(mountInlineReader, 120);
   window.setInterval(fixAwardModal, 300);
   window.setInterval(setupAwardDrag, 500);
+  window.setInterval(mountManuscriptSection, 500);
   window.setInterval(mountVisitorCounter, 700);
   window.setInterval(removeAccountControls, 500);
   window.setInterval(removeMastheadAuthor, 500);
