@@ -845,8 +845,8 @@
       .gs-poem-couplet.is-single { justify-content: flex-start; }
       .gs-work-guides {
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: clamp(24px, 6vw, 72px);
+        grid-template-columns: minmax(0, 1fr);
+        gap: 0;
         margin-top: 46px;
         padding-top: 24px;
         border-top: 1px solid rgba(69, 80, 65, .2);
@@ -866,6 +866,12 @@
         font: inherit;
         text-align: left;
       }
+      .gs-next-copy { min-width: 0; }
+      .gs-next-work + .gs-next-work {
+        margin-top: 12px;
+        padding-top: 20px;
+        border-top: 1px solid rgba(69, 80, 65, .12);
+      }
       .gs-previous-work { grid-template-columns: auto 1fr; }
       .gs-previous-work .gs-next-copy { text-align: left; }
       .gs-work-guides .gs-next-work:last-child:not(:first-child) .gs-next-copy { text-align: right; }
@@ -879,8 +885,11 @@
       .gs-next-title {
         display: block;
         font-family: serif;
-        font-size: clamp(20px, 3vw, 27px);
+        font-size: clamp(17px, 2.4vw, 22px);
+        line-height: 1.5;
         letter-spacing: .08em;
+        overflow-wrap: anywhere;
+        white-space: normal;
       }
       .gs-next-arrow {
         color: #758477;
@@ -938,7 +947,7 @@
         scroll-snap-type: x proximity;
         scrollbar-width: none !important;
         -ms-overflow-style: none;
-        touch-action: pan-y pinch-zoom;
+        touch-action: pan-y;
         -webkit-overflow-scrolling: touch;
       }
       .gs-awards-drag-track::-webkit-scrollbar { display: none !important; }
@@ -975,6 +984,8 @@
         color: #687669;
         cursor: pointer;
         pointer-events: auto;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
         transition: color .2s ease, transform .2s ease;
       }
       .gs-awards-arrow::before {
@@ -1163,12 +1174,11 @@
           font-size: clamp(15px, 4.6vw, 19px);
         }
         .gs-work-guides {
-          gap: 18px;
           margin-top: 38px;
           padding-top: 20px;
         }
         .gs-next-work { gap: 9px; }
-        .gs-next-title { font-size: clamp(16px, 4.5vw, 20px); }
+        .gs-next-title { font-size: clamp(15px, 4vw, 18px); }
         .gs-reader-nav { margin-bottom: 14px; }
         .gs-award-modal-image {
           max-width: calc(100vw - 30px) !important;
@@ -1178,10 +1188,10 @@
           flex-basis: min(78vw, 300px) !important;
           width: min(78vw, 300px) !important;
         }
-        .gs-awards-arrow { width: 40px; height: 44px; }
+        .gs-awards-arrow { width: 56px; height: 72px; }
         .gs-awards-arrows {
-          padding: 0 3px;
-          transform: translateY(calc(var(--gs-award-arrow-y, 160px) - 22px));
+          padding: 0;
+          transform: translateY(calc(var(--gs-award-arrow-y, 160px) - 36px));
         }
         .gs-visitor-counter {
           gap: 10px;
@@ -1873,9 +1883,17 @@
   }
 
   function setupAwardDrag() {
+    const awardsSection = document.querySelector("#awards");
+    awardsSection?.querySelectorAll("p").forEach((paragraph) => {
+      const hint = "\u5de6\u53f3\u6ed1\u52d5\u700f\u89bd\uff0c\u8f15\u89f8\u653e\u5927";
+      if (paragraph.textContent.includes(hint)) {
+        paragraph.textContent = paragraph.textContent.replace(hint, "").trim();
+      }
+    });
     const figures = Array.from(document.querySelectorAll("#awards figure"));
     const track = figures[0]?.parentElement;
     if (!track || track.dataset.gsDragReady === "1") return;
+    awardsSection?.querySelectorAll(".gs-awards-arrows").forEach((arrows) => arrows.remove());
     track.dataset.gsDragReady = "1";
     track.classList.add("gs-awards-drag-track");
     track.setAttribute("aria-label", "\u69ae\u8b7d\u734e\u72c0\uff0c\u53ef\u5de6\u53f3\u62d6\u66f3\u700f\u89bd");
@@ -1887,6 +1905,7 @@
     let dragThreshold = 6;
     let suppressClickUntil = 0;
     track.addEventListener("pointerdown", (event) => {
+      if (event.pointerType === "touch") return;
       if (event.pointerType === "mouse" && event.button !== 0) return;
       startX = event.clientX;
       startScrollLeft = track.scrollLeft;
@@ -1918,6 +1937,40 @@
     };
     track.addEventListener("pointerup", finishDrag);
     track.addEventListener("pointercancel", finishDrag);
+    let touchActive = false;
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let touchStartScrollLeft = 0;
+    track.addEventListener("touchstart", (event) => {
+      if (event.touches.length !== 1) return;
+      const touch = event.touches[0];
+      touchActive = true;
+      moved = false;
+      touchStartX = touch.clientX;
+      touchStartY = touch.clientY;
+      touchStartScrollLeft = track.scrollLeft;
+    }, { passive: true });
+    track.addEventListener("touchmove", (event) => {
+      if (!touchActive || event.touches.length !== 1) return;
+      const touch = event.touches[0];
+      const distanceX = touch.clientX - touchStartX;
+      const distanceY = touch.clientY - touchStartY;
+      if (!moved && Math.abs(distanceX) > 10 && Math.abs(distanceX) > Math.abs(distanceY) * 1.08) {
+        moved = true;
+        track.classList.add("is-dragging");
+      }
+      if (!moved) return;
+      event.preventDefault();
+      track.scrollLeft = touchStartScrollLeft - distanceX;
+    }, { passive: false });
+    const finishTouchDrag = () => {
+      if (!touchActive) return;
+      touchActive = false;
+      track.classList.remove("is-dragging");
+      if (moved) suppressClickUntil = Date.now() + 350;
+    };
+    track.addEventListener("touchend", finishTouchDrag, { passive: true });
+    track.addEventListener("touchcancel", finishTouchDrag, { passive: true });
     track.addEventListener("click", (event) => {
       if (Date.now() >= suppressClickUntil) return;
       event.preventDefault();
@@ -1993,7 +2046,12 @@
   }
 
   function mountVisitorCounter() {
-    if (document.querySelector(".gs-visitor-counter")) return;
+    const footer = document.querySelector("footer");
+    const existing = document.querySelector(".gs-visitor-counter");
+    if (existing) {
+      if (footer && existing.parentElement !== footer) footer.append(existing);
+      return;
+    }
     const counter = document.createElement("aside");
     counter.className = "gs-visitor-counter";
     counter.setAttribute("aria-label", "\u7db2\u7ad9\u700f\u89bd\u4eba\u6578");
@@ -2001,7 +2059,8 @@
       <span class="gs-visitor-label">\u5171\u8b80\u8a69\u6587\u4eba\u6b21</span>
       <span class="gs-visitor-value" aria-live="polite">\u2026</span>
     `;
-    document.body.append(counter);
+    if (footer) footer.append(counter);
+    else document.body.append(counter);
     loadVisitorCount(counter.querySelector(".gs-visitor-value"));
   }
 
