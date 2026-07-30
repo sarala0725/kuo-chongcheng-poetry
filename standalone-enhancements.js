@@ -2023,24 +2023,37 @@
       shouldIncrement = location.hostname === productionHost;
     }
     const action = shouldIncrement ? "up" : "";
-    const endpoint = `/api/visitor-count${action ? `?action=${action}` : ""}`;
+    const endpoint = `https://api.counterapi.dev/v1/kuo-chongcheng-poetry/visitors/${action}`;
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 12000);
     try {
-      const response = await fetch(endpoint, { cache: "no-store" });
+      const response = await fetch(endpoint, { cache: "no-store", signal: controller.signal });
       if (!response.ok) throw new Error("visitor counter unavailable");
       const data = await response.json();
       const count = Number(data.count ?? data.value ?? data);
       if (!Number.isFinite(count)) throw new Error("visitor count missing");
+      window.clearTimeout(timeout);
       valueElement.textContent = new Intl.NumberFormat("zh-TW", {
         minimumIntegerDigits: 6,
         useGrouping: false,
       }).format(count);
+      try {
+        localStorage.setItem("gs_last_visit_count", String(count));
+      } catch (_) {}
       if (shouldIncrement) {
         try {
           sessionStorage.setItem(sessionKey, "1");
         } catch (_) {}
       }
     } catch (_) {
-      valueElement.textContent = "\u2014";
+      window.clearTimeout(timeout);
+      let savedCount = 0;
+      try {
+        savedCount = Number(localStorage.getItem("gs_last_visit_count"));
+      } catch (_) {}
+      valueElement.textContent = Number.isFinite(savedCount) && savedCount > 0
+        ? new Intl.NumberFormat("zh-TW", { minimumIntegerDigits: 6, useGrouping: false }).format(savedCount)
+        : "\u2014";
       valueElement.closest(".gs-visitor-counter")?.setAttribute("title", "\u700f\u89bd\u4eba\u6578\u66ab\u6642\u7121\u6cd5\u53d6\u5f97");
     }
   }
