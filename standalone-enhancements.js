@@ -843,6 +843,14 @@
         overflow-wrap: anywhere;
       }
       .gs-poem-couplet.is-single { justify-content: flex-start; }
+      .gs-work-guides {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: clamp(24px, 6vw, 72px);
+        margin-top: 46px;
+        padding-top: 24px;
+        border-top: 1px solid rgba(69, 80, 65, .2);
+      }
       .gs-next-work {
         appearance: none;
         display: grid;
@@ -850,16 +858,17 @@
         align-items: center;
         gap: 18px;
         width: 100%;
-        margin-top: 46px;
-        padding: 24px 0 10px;
+        padding: 0 0 10px;
         border: 0;
-        border-top: 1px solid rgba(69, 80, 65, .2);
         background: transparent;
         color: #39352f;
         cursor: pointer;
         font: inherit;
         text-align: left;
       }
+      .gs-previous-work { grid-template-columns: auto 1fr; }
+      .gs-previous-work .gs-next-copy { text-align: left; }
+      .gs-work-guides .gs-next-work:last-child:not(:first-child) .gs-next-copy { text-align: right; }
       .gs-next-label {
         display: block;
         margin-bottom: 8px;
@@ -879,6 +888,7 @@
         transition: transform .25s ease;
       }
       .gs-next-work:hover .gs-next-arrow { transform: translateX(5px); }
+      .gs-previous-work:hover .gs-next-arrow { transform: translateX(-5px); }
       @keyframes gs-reader-enter {
         from { opacity: 0; transform: translateY(12px); }
         to { opacity: 1; transform: translateY(0); }
@@ -989,52 +999,29 @@
         transform: none;
       }
       .gs-visitor-counter {
-        display: grid;
-        grid-template-columns: auto minmax(0, 1fr) auto;
+        display: flex;
         align-items: center;
-        gap: 18px;
+        justify-content: center;
+        gap: 13px;
         width: min(920px, calc(100% - 48px));
-        margin: 58px auto 34px;
-        padding: 25px clamp(20px, 4vw, 42px);
+        margin: 18px auto 30px;
+        padding: 24px 10px 8px;
         border-top: 1px solid rgba(82, 74, 62, .18);
-        border-bottom: 1px solid rgba(82, 74, 62, .13);
         color: #756b5d;
-      }
-      .gs-visitor-seal {
-        display: grid;
-        width: 43px;
-        height: 43px;
-        place-items: center;
-        border: 1px solid rgba(133, 72, 55, .62);
-        color: #8a5144;
-        font-family: serif;
-        font-size: 12px;
-        line-height: 1.1;
-        letter-spacing: .08em;
         text-align: center;
-        transform: rotate(-2deg);
-      }
-      .gs-visitor-copy { min-width: 0; }
-      .gs-visitor-kicker {
-        display: block;
-        margin-bottom: 5px;
-        color: #9a8f7e;
-        font-size: 10px;
-        letter-spacing: .26em;
       }
       .gs-visitor-label {
-        display: block;
         color: #5c554c;
         font-family: serif;
-        font-size: 15px;
+        font-size: 14px;
         letter-spacing: .16em;
       }
       .gs-visitor-value {
         color: #474139;
         font-family: Georgia, serif;
-        font-size: clamp(23px, 3vw, 31px);
+        font-size: 18px;
         font-variant-numeric: tabular-nums;
-        letter-spacing: .12em;
+        letter-spacing: .08em;
         white-space: nowrap;
       }
       .gs-visitor-value.is-preview {
@@ -1163,7 +1150,7 @@
     max-width: 100%;
     margin-right: auto;
     margin-left: auto;
-    font-size: clamp(13px, 4.2vw, 17px) !important;
+    font-size: clamp(15px, 4.6vw, 19px) !important;
     line-height: 1.75 !important;
   }
         .gs-poem-couplet {
@@ -1173,8 +1160,15 @@
           width: max-content;
         }
         .gs-poem-suite-intro {
-          font-size: clamp(13px, 4.2vw, 17px);
+          font-size: clamp(15px, 4.6vw, 19px);
         }
+        .gs-work-guides {
+          gap: 18px;
+          margin-top: 38px;
+          padding-top: 20px;
+        }
+        .gs-next-work { gap: 9px; }
+        .gs-next-title { font-size: clamp(16px, 4.5vw, 20px); }
         .gs-reader-nav { margin-bottom: 14px; }
         .gs-award-modal-image {
           max-width: calc(100vw - 30px) !important;
@@ -1190,16 +1184,13 @@
           transform: translateY(calc(var(--gs-award-arrow-y, 160px) - 22px));
         }
         .gs-visitor-counter {
-          grid-template-columns: auto 1fr;
-          gap: 13px;
+          gap: 10px;
           width: calc(100% - 40px);
-          margin-top: 42px;
-          padding: 20px 5px;
+          margin-top: 12px;
+          padding: 20px 5px 6px;
         }
         .gs-visitor-value {
-          grid-column: 2;
-          margin-top: -7px;
-          font-size: 24px;
+          font-size: 17px;
         }
         .gs-inner-go-top {
           right: 12px;
@@ -1455,7 +1446,7 @@
     const panel = shell?.querySelector(".gs-inline-reader-panel");
     const currentTitle = shell?.dataset.gsReaderTitle;
     const collection = shell?.dataset.gsReaderCollection;
-    if (!panel || !currentTitle || !collection || panel.querySelector(".gs-next-work")) return;
+    if (!panel || !currentTitle || !collection || panel.querySelector(".gs-work-guides")) return;
     let works = getReaderWorkCards().filter((card) => {
       const typeMatches = activeWorkType === "\u5168\u90e8" || card.dataset.gsWorkType === activeWorkType;
       return card.dataset.gsCollection === collection && typeMatches;
@@ -1465,28 +1456,43 @@
     }
     if (works.length < 2) return;
     const currentIndex = works.findIndex((card) => card.querySelector("h3")?.textContent.trim() === currentTitle);
+    if (currentIndex < 0) return;
+    const previousCard = works[(currentIndex - 1 + works.length) % works.length];
     const nextCard = works[(currentIndex + 1 + works.length) % works.length];
+    const previousTitle = previousCard?.querySelector("h3")?.textContent.trim();
     const nextTitle = nextCard?.querySelector("h3")?.textContent.trim();
-    if (!nextTitle || nextTitle === currentTitle) return;
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "gs-next-work";
-    button.dataset.gsNextTitle = nextTitle;
-    button.dataset.gsCollection = collection;
-    const copy = document.createElement("span");
-    const label = document.createElement("span");
-    label.className = "gs-next-label";
-    label.textContent = "\u4e0b\u4e00\u7bc7";
-    const title = document.createElement("span");
-    title.className = "gs-next-title";
-    title.textContent = nextTitle;
-    const arrow = document.createElement("span");
-    arrow.className = "gs-next-arrow";
-    arrow.setAttribute("aria-hidden", "true");
-    arrow.textContent = "\u2192";
-    copy.append(label, title);
-    button.append(copy, arrow);
-    panel.append(button);
+    if (!previousTitle || !nextTitle) return;
+    const guides = document.createElement("nav");
+    guides.className = "gs-work-guides";
+    guides.setAttribute("aria-label", "\u7bc7\u7ae0\u5c0e\u89bd");
+    const createGuide = (titleText, labelText, direction) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = `gs-next-work${direction === "previous" ? " gs-previous-work" : ""}`;
+      button.dataset.gsNextTitle = titleText;
+      button.dataset.gsCollection = collection;
+      const copy = document.createElement("span");
+      copy.className = "gs-next-copy";
+      const label = document.createElement("span");
+      label.className = "gs-next-label";
+      label.textContent = labelText;
+      const title = document.createElement("span");
+      title.className = "gs-next-title";
+      title.textContent = titleText;
+      const arrow = document.createElement("span");
+      arrow.className = "gs-next-arrow";
+      arrow.setAttribute("aria-hidden", "true");
+      arrow.textContent = direction === "previous" ? "\u2190" : "\u2192";
+      copy.append(label, title);
+      if (direction === "previous") button.append(arrow, copy);
+      else button.append(copy, arrow);
+      return button;
+    };
+    guides.append(
+      createGuide(previousTitle, "\u4e0a\u4e00\u7bc7", "previous"),
+      createGuide(nextTitle, "\u4e0b\u4e00\u7bc7", "next")
+    );
+    panel.append(guides);
   }
 
   function openNextWork(button) {
@@ -1964,7 +1970,7 @@
       shouldIncrement = location.hostname === productionHost;
     }
     const action = shouldIncrement ? "up" : "";
-    const endpoint = `https://api.counterapi.dev/v1/kuo-chongcheng-poetry/visitors/${action}`;
+    const endpoint = `/api/visitor-count${action ? `?action=${action}` : ""}`;
     try {
       const response = await fetch(endpoint, { cache: "no-store" });
       if (!response.ok) throw new Error("visitor counter unavailable");
@@ -1981,7 +1987,7 @@
         } catch (_) {}
       }
     } catch (_) {
-      valueElement.textContent = "\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7";
+      valueElement.textContent = "\u2014";
       valueElement.closest(".gs-visitor-counter")?.setAttribute("title", "\u700f\u89bd\u4eba\u6578\u66ab\u6642\u7121\u6cd5\u53d6\u5f97");
     }
   }
@@ -1992,16 +1998,10 @@
     counter.className = "gs-visitor-counter";
     counter.setAttribute("aria-label", "\u7db2\u7ad9\u700f\u89bd\u4eba\u6578");
     counter.innerHTML = `
-      <span class="gs-visitor-seal" aria-hidden="true">\u8a69<br>\u8de1</span>
-      <span class="gs-visitor-copy">
-        <span class="gs-visitor-kicker">ARCHIVE VISITS</span>
-        <span class="gs-visitor-label">\u5171\u8b80\u8a69\u6587\u4eba\u6b21</span>
-      </span>
-      <span class="gs-visitor-value" aria-live="polite">\u00b7\u00b7\u00b7\u00b7\u00b7\u00b7</span>
+      <span class="gs-visitor-label">\u5171\u8b80\u8a69\u6587\u4eba\u6b21</span>
+      <span class="gs-visitor-value" aria-live="polite">\u2026</span>
     `;
-    const footer = document.querySelector("footer");
-    if (footer) footer.before(counter);
-    else document.body.append(counter);
+    document.body.append(counter);
     loadVisitorCount(counter.querySelector(".gs-visitor-value"));
   }
 
