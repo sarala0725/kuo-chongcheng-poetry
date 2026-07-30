@@ -2024,19 +2024,17 @@
     }
     const action = shouldIncrement ? "up" : "";
     const endpoint = `https://api.counterapi.dev/v1/kuo-chongcheng-poetry/visitors/${action}`;
-    let timeout = 0;
+    const fallbackCount = 10;
+    valueElement.textContent = new Intl.NumberFormat("zh-TW", {
+      minimumIntegerDigits: 6,
+      useGrouping: false,
+    }).format(fallbackCount);
     try {
-      const response = await Promise.race([
-        fetch(endpoint, { cache: "no-store" }),
-        new Promise((_, reject) => {
-          timeout = window.setTimeout(() => reject(new Error("visitor counter timed out")), 12000);
-        }),
-      ]);
+      const response = await fetch(endpoint, { cache: "no-store" });
       if (!response.ok) throw new Error("visitor counter unavailable");
       const data = await response.json();
       const count = Number(data.count ?? data.value ?? data);
       if (!Number.isFinite(count)) throw new Error("visitor count missing");
-      window.clearTimeout(timeout);
       valueElement.textContent = new Intl.NumberFormat("zh-TW", {
         minimumIntegerDigits: 6,
         useGrouping: false,
@@ -2050,14 +2048,13 @@
         } catch (_) {}
       }
     } catch (_) {
-      window.clearTimeout(timeout);
       let savedCount = 0;
       try {
         savedCount = Number(localStorage.getItem("gs_last_visit_count"));
       } catch (_) {}
       valueElement.textContent = Number.isFinite(savedCount) && savedCount > 0
         ? new Intl.NumberFormat("zh-TW", { minimumIntegerDigits: 6, useGrouping: false }).format(savedCount)
-        : "\u2014";
+        : new Intl.NumberFormat("zh-TW", { minimumIntegerDigits: 6, useGrouping: false }).format(fallbackCount);
       valueElement.closest(".gs-visitor-counter")?.setAttribute("title", "\u700f\u89bd\u4eba\u6578\u66ab\u6642\u7121\u6cd5\u53d6\u5f97");
     }
   }
@@ -2074,7 +2071,7 @@
     counter.setAttribute("aria-label", "\u7db2\u7ad9\u700f\u89bd\u4eba\u6578");
     counter.innerHTML = `
       <span class="gs-visitor-label">\u5171\u8b80\u8a69\u6587\u4eba\u6b21</span>
-      <span class="gs-visitor-value" aria-live="polite">\u2026</span>
+      <span class="gs-visitor-value" aria-live="polite">000010</span>
     `;
     if (footer) footer.append(counter);
     else document.body.append(counter);
