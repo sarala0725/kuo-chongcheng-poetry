@@ -845,18 +845,18 @@
       .gs-poem-couplet.is-single { justify-content: flex-start; }
       .gs-work-guides {
         display: grid;
-        grid-template-columns: minmax(0, 1fr);
-        gap: 0;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: clamp(24px, 6vw, 72px);
         margin-top: 46px;
         padding-top: 24px;
         border-top: 1px solid rgba(69, 80, 65, .2);
       }
       .gs-next-work {
         appearance: none;
-        display: grid;
-        grid-template-columns: 1fr auto;
-        align-items: center;
-        gap: 18px;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
         width: 100%;
         padding: 0 0 10px;
         border: 0;
@@ -868,20 +868,12 @@
       }
       .gs-next-copy { min-width: 0; }
       .gs-next-work + .gs-next-work {
-        margin-top: 12px;
-        padding-top: 20px;
-        border-top: 1px solid rgba(69, 80, 65, .12);
+        align-items: flex-end;
+        text-align: right;
       }
-      .gs-previous-work { grid-template-columns: auto 1fr; }
       .gs-previous-work .gs-next-copy { text-align: left; }
       .gs-work-guides .gs-next-work:last-child:not(:first-child) .gs-next-copy { text-align: right; }
-      .gs-next-label {
-        display: block;
-        margin-bottom: 8px;
-        color: #8b826f;
-        font-size: 11px;
-        letter-spacing: .18em;
-      }
+      .gs-next-label { display: none; }
       .gs-next-title {
         display: block;
         font-family: serif;
@@ -892,8 +884,10 @@
         white-space: normal;
       }
       .gs-next-arrow {
+        display: block;
         color: #758477;
         font-size: 26px;
+        line-height: 1;
         transition: transform .25s ease;
       }
       .gs-next-work:hover .gs-next-arrow { transform: translateX(5px); }
@@ -1174,10 +1168,11 @@
           font-size: clamp(15px, 4.6vw, 19px);
         }
         .gs-work-guides {
+          gap: 18px;
           margin-top: 38px;
           padding-top: 20px;
         }
-        .gs-next-work { gap: 9px; }
+        .gs-next-work { gap: 7px; }
         .gs-next-title { font-size: clamp(15px, 4vw, 18px); }
         .gs-reader-nav { margin-bottom: 14px; }
         .gs-award-modal-image {
@@ -1494,8 +1489,7 @@
       arrow.setAttribute("aria-hidden", "true");
       arrow.textContent = direction === "previous" ? "\u2190" : "\u2192";
       copy.append(label, title);
-      if (direction === "previous") button.append(arrow, copy);
-      else button.append(copy, arrow);
+      button.append(arrow, copy);
       return button;
     };
     guides.append(
@@ -1880,6 +1874,31 @@
       if (node.nodeType !== Node.TEXT_NODE || !node.textContent.includes("\u90ed\u5d07\u57ce")) return;
       node.textContent = node.textContent.replace(/\u90ed\u5d07\u57ce/g, "");
     });
+  }
+
+  function normalizeReaderEchoYears() {
+    const yearMap = new Map([
+      ["2024.04", "2026.04"],
+      ["2024.05", "2026.05"],
+      ["2024.06", "2026.06"],
+    ]);
+    document.querySelectorAll("#echoes *").forEach((element) => {
+      if (element.children.length) return;
+      const replacement = yearMap.get(element.textContent.trim());
+      if (replacement) element.textContent = replacement;
+    });
+    try {
+      const stored = JSON.parse(localStorage.getItem("gs_readerPoems") || "[]");
+      let changed = false;
+      const updated = stored.map((entry) => {
+        if (!["r0a", "r0b", "r0c"].includes(entry.id)) return entry;
+        const nextDate = yearMap.get(entry.date);
+        if (!nextDate) return entry;
+        changed = true;
+        return { ...entry, date: nextDate };
+      });
+      if (changed) localStorage.setItem("gs_readerPoems", JSON.stringify(updated));
+    } catch (_) {}
   }
 
   function setupAwardDrag() {
@@ -2287,6 +2306,7 @@
   window.setInterval(mountVisitorCounter, 700);
   window.setInterval(removeAccountControls, 500);
   window.setInterval(removeMastheadAuthor, 500);
+  window.setInterval(normalizeReaderEchoYears, 500);
   window.setInterval(bindParentGoTop, 500);
   window.setInterval(mountInnerGoTop, 500);
 })();
