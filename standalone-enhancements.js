@@ -1,4 +1,22 @@
 (() => {
+  const paperTextureStyle = document.createElement("style");
+  paperTextureStyle.id = "gs-paper-texture-style";
+  paperTextureStyle.textContent = `
+    html,
+    body {
+      background-color: #ebe3d2 !important;
+      background-image: url("assets/clean-gray-paper.png") !important;
+      background-repeat: repeat !important;
+    }
+    body > div[style*="background-color: var(--paper-bg"] {
+      background-color: #ebe3d2 !important;
+      background-image: url("assets/clean-gray-paper.png") !important;
+      background-repeat: repeat !important;
+      background-attachment: local !important;
+    }
+  `;
+  document.head.appendChild(paperTextureStyle);
+
   const illustrations = new Map([
     ["\u864e\u982d\u57e4\u5609\u5e74\u83ef\u6703", "assets/ink-wash/hutoupi-carnival.png"],
     ["\u58be\u4e01\u570b\u5bb6\u516c\u5712\u4e4b\u65c5", "assets/ink-wash/kenting-journey.png"],
@@ -68,6 +86,7 @@
   let manuscriptAutoplayTimer = 0;
   let manuscriptAutoplayPaused = false;
   let manuscriptInView = false;
+  const manuscriptScrollBoundSections = new WeakSet();
   const manuscriptPages = [
     { file: "LINE_ALBUM_2026730_260730_1.jpg", kind: "詩稿", title: "楠西江家古厝・楠西春望", note: "兩首詩並列於一紙，保留最初落筆的呼吸。" },
     { file: "LINE_ALBUM_2026730_260730_17.jpg", kind: "吟會稿紙", title: "詩社吟稿", note: "紅框稿紙與端整墨跡，留下昔日詩會的正式氣息。" },
@@ -121,6 +140,8 @@
         transform-origin: left center;
       }
       .gs-calligraphy-hero {
+        position: relative;
+        isolation: isolate;
         font-family: "GS HanWang ShinSu", "STXingkai", "STKaiti", cursive !important;
         font-size: clamp(54px, 8.5vw, 132px) !important;
         font-weight: 400 !important;
@@ -129,6 +150,15 @@
         color: #3a342d !important;
         background: none !important;
         -webkit-text-fill-color: currentColor !important;
+      }
+      .gs-calligraphy-hero::before {
+        content: none;
+        display: none;
+      }
+      @keyframes gs-ink-wash {
+        0% { opacity:.1; transform:scale(.96, .9); }
+        48% { opacity:.24; transform:scale(1.025, 1.04); }
+        100% { opacity:.16; transform:scale(1.05, .98); }
       }
       .gs-calligraphy-hero,
       .gs-calligraphy-hero *,
@@ -150,10 +180,16 @@
         overflow: visible;
         filter: drop-shadow(.8px 1.2px 0 rgba(92, 70, 44, .14));
       }
+      /* A varied running-script composition, shared by outlines and ink paths. */
+      .gs-hero-vector-slot:nth-child(1) .gs-hero-svg { transform: translateY(-5%) rotate(-3deg) scale(1.08,1.14); }
+      .gs-hero-vector-slot:nth-child(2) .gs-hero-svg { transform: translateY(4%) rotate(2deg) scale(.98,1.03); }
+      .gs-hero-vector-slot:nth-child(3) .gs-hero-svg { transform: translateY(-1%) rotate(-2deg) scale(1.05,1.09); }
+      .gs-hero-vector-slot:nth-child(4) .gs-hero-svg { transform: translateY(6%) rotate(2deg) scale(.96,1.02); }
+      .gs-hero-vector-slot:nth-child(5) .gs-hero-svg { transform: translateY(-5%) rotate(-2deg) scale(1.05,1.16); }
       .gs-hero-stroke-reveal {
         fill: none;
-        stroke: #3a342d;
-        stroke-width: 118;
+        stroke: #302d28;
+        stroke-width: 126;
         stroke-linecap: round;
         stroke-linejoin: round;
         stroke-dasharray: 1;
@@ -163,10 +199,10 @@
         animation-delay: var(--stroke-delay);
       }
       .gs-hero-fill {
-        fill: #3a342d;
+        fill: #302d28;
         opacity: 0;
         animation:
-          gs-vector-fill .58s ease-out var(--fill-delay) forwards,
+          gs-vector-fill .68s ease-out var(--fill-delay) forwards,
           gs-fill-breathe var(--settle-duration) ease-in-out var(--settle-delay) infinite alternate;
       }
       .gs-hero-waiting .gs-hero-stroke-reveal,
@@ -339,19 +375,30 @@
   }
 
   function styleHeroTitle() {
-    if (document.documentElement.dataset.gsHeroReady === "1" && !document.querySelector("#hw-hero svg:not(.gs-hero-svg)")) return;
+    if (document.documentElement.dataset.gsHeroReady === "1" && !document.querySelector("#hw-hero svg:not(.gs-hero-svg)")) {
+      if (document.documentElement.dataset.gsHeroPlayRequested === "1") {
+        document.querySelector("#hw-hero")?.classList.remove("gs-hero-waiting");
+      }
+      return;
+    }
     const expectedCharacters = Array.from("耕舍詩文集");
     const hanziHero = document.querySelector("#hw-hero");
     const hanziSlots = Array.from(document.querySelectorAll("#hw-hero [data-hz]"));
     if (hanziHero && hanziSlots.length === expectedCharacters.length) {
-      hanziHero.classList.add("gs-calligraphy-hero", "gs-hero-waiting");
+      hanziHero.classList.add("gs-calligraphy-hero");
+      if (document.documentElement.dataset.gsHeroPlayRequested !== "1") {
+        hanziHero.classList.add("gs-hero-waiting");
+      } else {
+        hanziHero.classList.remove("gs-hero-waiting");
+      }
       hanziHero.setAttribute("aria-label", "耕舍詩文集");
       const totalStrokeCount = hanziSlots.reduce((sum, slot, index) => {
         const character = slot.getAttribute("data-hz") || expectedCharacters[index];
         return sum + (window.GS_HERO_CALLIGRAPHY?.[character]?.medians?.length || 0);
       }, 0);
-      const settledAt = 1.43 + totalStrokeCount * .145;
+      const settledAt = 1 + totalStrokeCount * .105;
       let strokeCursor = 0;
+      let inkTime = .15;
       hanziSlots.forEach((slot, index) => {
         const character = slot.getAttribute("data-hz") || expectedCharacters[index];
         const vector = window.GS_HERO_CALLIGRAPHY?.[character];
@@ -380,18 +427,21 @@
             const medianPath = median.map(([x, y], pointIndex) => {
               return `${pointIndex === 0 ? "M" : "L"}${x} ${900 - y}`;
             }).join(" ");
-            const duration = Math.min(.38, Math.max(.2, median.length * .03));
+            const length = median.reduce((sum, point, i) => i ? sum + Math.hypot(point[0] - median[i - 1][0], point[1] - median[i - 1][1]) : 0, 0);
+            const duration = Math.min(.46, Math.max(.16, length / 1900)) * .43;
             stroke.classList.add("gs-hero-stroke-reveal");
             stroke.setAttribute("d", medianPath);
             stroke.setAttribute("pathLength", "1");
-            stroke.style.setProperty("--stroke-delay", `${(.15 + strokeCursor * .145).toFixed(2)}s`);
+            stroke.style.setProperty("--stroke-delay", `${inkTime.toFixed(2)}s`);
             stroke.style.setProperty("--stroke-duration", `${duration.toFixed(2)}s`);
             revealGroup.append(stroke);
             strokeCursor += 1;
+            inkTime += duration * .86 + .008;
           });
           fill.classList.add("gs-hero-fill");
           fill.setAttribute("d", vector.path);
-          fill.style.setProperty("--fill-delay", `${(.5 + strokeCursor * .145).toFixed(2)}s`);
+          fill.style.setProperty("--fill-delay", `${(inkTime + .08).toFixed(2)}s`);
+          inkTime += .06;
           svg.append(defs, revealGroup, fill);
           slot.replaceChildren(svg);
         } else {
@@ -409,6 +459,9 @@
         slot.style.setProperty("overflow", "visible", "important");
         slot.style.setProperty("font-family", '"GS HanWang ShinSu", cursive', "important");
       });
+      // Reveal all five glyphs atomically. Until this point the critical
+      // stylesheet keeps HanziWriter's pale outlines and partial strokes hidden.
+      hanziHero.classList.add("gs-hero-rendered");
       window.setTimeout(() => {
         hanziHero.classList.remove("gs-hero-waiting");
       }, 12000);
@@ -2394,33 +2447,367 @@
         letter-spacing: .12em;
         text-align: center;
       }
+      .gs-manuscripts {
+        --scene-one-opacity: 1;
+        --scene-two-opacity: 0;
+        --scene-three-opacity: 0;
+        --scene-four-opacity: 0;
+        --scene-paper-opacity: 0;
+        --scene-one-scale: 1;
+        --scene-two-scale: 1.02;
+        --scene-three-scale: 1.02;
+        --scene-four-scale: 1.02;
+        --scene-paper-scale: 1;
+        --scene-two-x: 0px;
+        --scene-three-x: 0px;
+        --scene-four-enter-x: 0px;
+        --scene-turn-x: 0px;
+        --scene-turn-y: 0px;
+        --scene-turn-rotate: 0deg;
+        --scene-y: 0px;
+        --scene-focus: 0;
+        --scene-brightness: .8;
+        --shade-opacity: .42;
+        --atmosphere-opacity: 0;
+        --stage-reveal: 0;
+        --stage-y: 70px;
+        --stage-scale: .92;
+        --reader-left: 112px;
+        --reader-width: 390px;
+        --reader-image-height: 320px;
+        --reader-bottom: 108px;
+        --reader-rotate: -.35deg;
+        --reader-tilt: 56deg;
+        --reader-z-rotate: -5deg;
+        --reader-lift-scale: .78;
+        --reader-controls-opacity: 0;
+        --reader-controls-y: 12px;
+        --reader-caption-opacity: 0;
+        --intro-opacity: 1;
+        --intro-y: 0px;
+        min-height: 455svh;
+        padding: 0;
+        overflow: visible;
+        border-top: 0;
+        background: #292820;
+        color: #f5edda;
+      }
+      .gs-manuscript-sticky {
+        position: sticky;
+        top: 0;
+        height: 100svh;
+        min-height: 620px;
+        overflow: hidden;
+        isolation: isolate;
+        background: #27271f;
+      }
+      .gs-manuscript-backdrop {
+        position: absolute;
+        inset: -5%;
+        z-index: -4;
+        filter: saturate(.78) sepia(.08) brightness(var(--scene-brightness));
+        transform-origin: 47% 48%;
+        will-change: transform, filter, opacity;
+      }
+      .gs-manuscript-scene-far {
+        background: url("assets/manuscript-pharmacy-scene.png?v=20260802b") center center / cover no-repeat;
+        opacity: var(--scene-one-opacity);
+        transform: translate3d(0, var(--scene-y), 0) scale(var(--scene-one-scale));
+      }
+      .gs-manuscript-scene-threshold {
+        background: url("assets/manuscript-pharmacy-threshold.png?v=20260802a") center center / cover no-repeat;
+        opacity: var(--scene-two-opacity);
+        transform: translate3d(var(--scene-two-x), var(--scene-y), 0) scale(var(--scene-two-scale));
+      }
+      .gs-manuscript-scene-interior {
+        background: url("assets/manuscript-pharmacy-interior.png?v=20260802a") center center / cover no-repeat;
+        opacity: var(--scene-three-opacity);
+        transform: translate3d(var(--scene-three-x), var(--scene-y), 0) scale(var(--scene-three-scale));
+        transform-origin: 24% 68%;
+      }
+      .gs-manuscript-scene-desk {
+        background: url("assets/manuscript-pharmacy-desk-turn.png?v=20260802b") center center / cover no-repeat;
+        opacity: var(--scene-four-opacity);
+        transform:
+          translate3d(calc(var(--scene-four-enter-x) + var(--scene-turn-x)), calc(var(--scene-y) + var(--scene-turn-y)), 0)
+          scale(var(--scene-four-scale))
+          rotate(var(--scene-turn-rotate));
+        transform-origin: 50% 70%;
+      }
+      .gs-manuscript-scene-paper {
+        background: url("assets/manuscript-paper-closeup.png?v=20260802a") center center / cover no-repeat;
+        opacity: var(--scene-paper-opacity);
+        transform: translate3d(0, var(--scene-y), 0) scale(var(--scene-paper-scale));
+        transform-origin: 50% 50%;
+      }
+      .gs-manuscript-shade {
+        position: absolute;
+        inset: 0;
+        z-index: -3;
+        background:
+          linear-gradient(90deg,
+            rgba(25, 24, 19, .08) 0%,
+            rgba(25, 24, 19, .02) 46%,
+            rgba(25, 24, 19, .34) 76%,
+            rgba(20, 20, 16, .5) 100%),
+          linear-gradient(180deg, rgba(18, 18, 14, .1), transparent 42%, rgba(18, 18, 14, .16));
+        opacity: var(--shade-opacity);
+        pointer-events: none;
+      }
+      .gs-manuscript-atmosphere {
+        position: absolute;
+        inset: 0;
+        z-index: -2;
+        pointer-events: none;
+        background:
+          radial-gradient(ellipse at 22% 72%, rgba(241, 216, 160, .12), transparent 32%),
+          linear-gradient(112deg, transparent 18%, rgba(246, 227, 180, .08) 36%, transparent 54%);
+        opacity: var(--atmosphere-opacity);
+        mix-blend-mode: screen;
+      }
+      .gs-manuscript-intro {
+        position: absolute;
+        left: clamp(28px, 7vw, 112px);
+        bottom: clamp(52px, 9vh, 96px);
+        z-index: 2;
+        max-width: 520px;
+        opacity: var(--intro-opacity);
+        transform: translateY(var(--intro-y));
+        transition: opacity .12s linear;
+        text-shadow: 0 2px 18px rgba(0, 0, 0, .72);
+        pointer-events: none;
+      }
+      .gs-manuscript-kicker {
+        color: rgba(247, 232, 198, .78);
+      }
+      .gs-manuscript-intro h2 {
+        margin: 0;
+        color: #fbf3df;
+        font-family: var(--font-poetic, "Noto Serif TC", "Songti TC", serif) !important;
+        font-size: clamp(32px, 4vw, 54px) !important;
+        font-weight: 400;
+        letter-spacing: .08em;
+        line-height: 1.35;
+      }
+      .gs-manuscript-intro p {
+        max-width: 36em;
+        margin: 20px 0 0;
+        color: rgba(250, 242, 222, .78);
+        font-size: 14px;
+        letter-spacing: .08em;
+        line-height: 1.9;
+      }
+      .gs-manuscript-enter-cue {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 22px;
+        color: rgba(250, 242, 222, .62);
+        font-size: 11px;
+        letter-spacing: .2em;
+      }
+      .gs-manuscript-enter-cue::before {
+        content: "";
+        width: 34px;
+        height: 1px;
+        background: currentColor;
+      }
+      .gs-manuscript-inner {
+        position: absolute;
+        inset: 0;
+        z-index: 2;
+        width: 100%;
+        margin: 0;
+        opacity: var(--stage-reveal);
+        transform: translate3d(0, var(--stage-y), 0) scale(var(--stage-scale));
+        transform-origin: 25% 78%;
+        pointer-events: none;
+        will-change: transform, opacity;
+      }
+      @keyframes gs-manuscript-scene-far {
+        0%, 18% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+        38%, 100% { opacity: 0; transform: translate3d(0, -8px, 0) scale(1.07); }
+      }
+      @keyframes gs-manuscript-scene-threshold {
+        0%, 17% { opacity: 0; transform: translate3d(0, 5px, 0) scale(1.02); }
+        34%, 52% { opacity: 1; transform: translate3d(0, -3px, 0) scale(1.06); }
+        72%, 100% { opacity: 0; transform: translate3d(0, -10px, 0) scale(1.11); }
+      }
+      @keyframes gs-manuscript-scene-interior {
+        0%, 56% { opacity: 0; transform: translate3d(0, 8px, 0) scale(1.01); }
+        78%, 100% { opacity: 1; transform: translate3d(0, 0, 0) scale(1.035); }
+      }
+      @keyframes gs-manuscript-shade {
+        0%, 24% { opacity: .34; }
+        78%, 100% { opacity: .72; }
+      }
+      @keyframes gs-manuscript-light-in {
+        0%, 31% { opacity: 0; }
+        74%, 100% { opacity: 1; }
+      }
+      @keyframes gs-manuscript-intro-away {
+        0%, 18% { opacity: 1; transform: translateY(0); }
+        32%, 100% { opacity: 0; transform: translateY(-18px); }
+      }
+      @keyframes gs-manuscript-stage-in {
+        0%, 66% { opacity: 0; transform: translate3d(0, 58px, 0) scale(.94); }
+        84%, 100% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+      }
+      .gs-manuscript-stage {
+        position: absolute;
+        left: var(--reader-left);
+        bottom: var(--reader-bottom);
+        width: var(--reader-width);
+        margin: 0;
+        perspective: 1600px;
+        pointer-events: auto;
+        transform:
+          perspective(1500px)
+          rotateX(var(--reader-tilt))
+          rotateZ(var(--reader-z-rotate))
+          scale(var(--reader-lift-scale));
+        transform-origin: 50% 82%;
+        will-change: left, width, bottom, transform;
+      }
+      .gs-manuscript-stage::before,
+      .gs-manuscript-stage::after {
+        opacity: .68;
+      }
+      .gs-manuscript-sheet {
+        padding: clamp(12px, 1.5vw, 18px) clamp(12px, 1.5vw, 18px) 14px;
+        border-color: rgba(83, 65, 41, .28);
+        background: rgba(241, 232, 207, .96);
+        box-shadow:
+          0 3px 1px rgba(69, 46, 25, .16),
+          0 22px 48px rgba(28, 23, 17, .38);
+        transform: rotate(var(--reader-rotate)) perspective(1200px) rotateX(1.5deg);
+      }
+      .gs-manuscript-image {
+        height: var(--reader-image-height);
+        min-height: 220px;
+      }
+      .gs-manuscript-caption {
+        max-height: calc(120px * var(--reader-caption-opacity));
+        padding: calc(16px * var(--reader-caption-opacity)) 2px calc(6px * var(--reader-caption-opacity));
+        overflow: hidden;
+        opacity: var(--reader-caption-opacity);
+        transform: translateY(calc(10px * (1 - var(--reader-caption-opacity))));
+      }
+      .gs-manuscript-title {
+        color: #3d352c;
+        font-size: clamp(18px, 2vw, 24px);
+      }
+      .gs-manuscript-note { color: #756b5f; }
+      .gs-manuscript-pen {
+        right: clamp(-190px, -14vw, -148px);
+        bottom: -10px;
+        width: clamp(190px, 18vw, 250px);
+        opacity: 0;
+        transform: rotate(7deg) scaleY(.965);
+      }
+      .gs-manuscript-controls {
+        position: absolute;
+        left: var(--reader-left);
+        bottom: clamp(24px, 4vh, 44px);
+        width: var(--reader-width);
+        margin: 0;
+        color: #eee4cd;
+        pointer-events: auto;
+        opacity: var(--reader-controls-opacity);
+        transform: translateY(var(--reader-controls-y));
+        transition: opacity .12s linear;
+      }
+      .gs-manuscript-arrow {
+        border-color: rgba(246, 236, 214, .34);
+        background: rgba(35, 31, 24, .48);
+        color: #f2e7cf;
+        backdrop-filter: blur(8px);
+      }
+      .gs-manuscript-arrow:hover { background: rgba(48, 43, 33, .72); }
+      .gs-manuscript-count { color: rgba(245, 235, 213, .82); }
+      .gs-manuscript-progress { background: rgba(245, 235, 213, .24); }
+      .gs-manuscript-progress::after { background: #d7c5a2; }
+      .gs-manuscript-play { color: #eee3ca; }
       body.gs-manuscript-modal-open { overflow: hidden !important; }
+      .gs-site-masthead {
+        transition: background-color .45s ease, box-shadow .45s ease, border-color .45s ease;
+      }
+      body.gs-manuscript-nav-active .gs-site-masthead {
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 240 !important;
+        isolation: isolate;
+        border-bottom-color: rgba(37, 56, 45, calc(.34 * var(--nav-canvas-opacity, 0))) !important;
+        background: transparent !important;
+        box-shadow: 0 6px 24px rgba(24, 35, 28, calc(.18 * var(--nav-canvas-opacity, 0))) !important;
+      }
+      body.gs-manuscript-nav-active .gs-site-masthead::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        pointer-events: none;
+        background:
+          linear-gradient(180deg, rgba(255,255,255,.025), rgba(24,48,35,.12)),
+          url("assets/manuscript-nav-awning.png?v=20260802a") center center / cover no-repeat;
+        opacity: var(--nav-canvas-opacity, 0);
+        transition: opacity .18s linear;
+      }
+      body.gs-manuscript-nav-active .gs-site-masthead a,
+      body.gs-manuscript-nav-active .gs-site-masthead button,
+      body.gs-manuscript-nav-active .gs-site-masthead .gs-calligraphy-brand {
+        color: rgba(241, 235, 211, .88) !important;
+        -webkit-text-fill-color: currentColor !important;
+        text-shadow:
+          0 1px 0 rgba(31, 50, 39, .34),
+          0 0 1px rgba(239, 233, 207, .42) !important;
+        opacity: var(--nav-ink-opacity, 0) !important;
+        transition: opacity .22s ease !important;
+      }
+      body.gs-manuscript-nav-active .gs-site-masthead a {
+        letter-spacing: .08em;
+      }
       @media (max-width: 700px) {
-        .gs-manuscripts { padding: 48px 20px 64px; }
-        .gs-manuscript-heading {
-          display: block;
-          margin-bottom: 38px;
-          text-align: center;
+        .gs-manuscripts { min-height: 420svh; }
+        .gs-manuscript-sticky { min-height: 560px; }
+        .gs-manuscript-backdrop {
+          inset: -4%;
+          transform-origin: 51% 51%;
         }
-        .gs-manuscript-heading h2 {
+        .gs-manuscript-scene-far { background-position: 53% center; }
+        .gs-manuscript-scene-threshold { background-position: 55% center; }
+        .gs-manuscript-scene-interior { background-position: 29% center; }
+        .gs-manuscript-scene-desk { background-position: 50% center; }
+        .gs-manuscript-scene-paper { background-position: 50% center; }
+        .gs-manuscript-shade {
+          background:
+            linear-gradient(180deg, rgba(20, 19, 15, .18), transparent 34%, rgba(20, 19, 15, .5) 100%),
+            linear-gradient(90deg, transparent 38%, rgba(20, 19, 15, .4) 100%);
+        }
+        .gs-manuscript-intro {
+          left: 22px;
+          right: 22px;
+          bottom: 62px;
+          text-align: left;
+        }
+        .gs-manuscript-intro h2 {
           font-size: clamp(28px, 8vw, 34px) !important;
           white-space: nowrap;
         }
-        .gs-manuscript-heading p {
-          max-width: 31em;
-          margin: 20px auto 0;
-          font-size: 14px;
+        .gs-manuscript-intro p { font-size: 13px; }
+        .gs-manuscript-stage {
+          bottom: 104px;
         }
         .gs-manuscript-sheet { padding: 13px 13px 16px; }
         .gs-manuscript-image {
-          height: min(47vh, 380px);
-          min-height: 250px;
+          height: var(--reader-image-height);
+          min-height: 230px;
         }
         .gs-manuscript-pen {
-          right: -98px;
-          bottom: -62px;
-          width: 152px;
-          opacity: .78;
+          right: -54px;
+          bottom: -50px;
+          width: 138px;
+          opacity: 0;
           transform: rotate(8deg) scaleY(.965);
         }
         .gs-manuscript-caption {
@@ -2432,12 +2819,57 @@
           margin-bottom: 12px;
         }
         .gs-manuscript-title { font-size: 22px; }
+        .gs-manuscript-note { display: none; }
+        .gs-manuscript-controls {
+          bottom: 28px;
+        }
       }
       @media (prefers-reduced-motion: reduce) {
         .gs-manuscript-sheet,
         .gs-manuscript-lightbox { transition-duration: .01ms !important; }
         .gs-manuscript-sheet.is-settled .gs-manuscript-image,
         .gs-manuscript-status.is-playing .gs-manuscript-progress::after {
+          animation: none !important;
+        }
+        .gs-manuscripts {
+          --scene-one-opacity: 0 !important;
+          --scene-two-opacity: 0 !important;
+          --scene-three-opacity: 0 !important;
+          --scene-four-opacity: 1 !important;
+          --scene-paper-opacity: 0 !important;
+          --scene-one-scale: 1 !important;
+          --scene-two-scale: 1 !important;
+          --scene-three-scale: 1.02 !important;
+          --scene-four-scale: 1.02 !important;
+          --scene-paper-scale: 1 !important;
+          --scene-two-x: 0px !important;
+          --scene-three-x: 0px !important;
+          --scene-four-enter-x: 0px !important;
+          --scene-turn-x: 0px !important;
+          --scene-turn-y: 0px !important;
+          --scene-turn-rotate: 0deg !important;
+          --reader-tilt: 0deg !important;
+          --reader-z-rotate: 0deg !important;
+          --reader-lift-scale: 1 !important;
+          --reader-controls-opacity: 1 !important;
+          --reader-controls-y: 0px !important;
+          --reader-caption-opacity: 1 !important;
+          --scene-y: 0px !important;
+          --scene-focus: 1 !important;
+          --scene-brightness: .88 !important;
+          --shade-opacity: 1 !important;
+          --atmosphere-opacity: 1 !important;
+          --stage-reveal: 1 !important;
+          --stage-y: 0px !important;
+          --stage-scale: 1 !important;
+          --intro-opacity: 0 !important;
+          --intro-y: -18px !important;
+        }
+        .gs-manuscript-backdrop,
+        .gs-manuscript-shade,
+        .gs-manuscript-atmosphere,
+        .gs-manuscript-intro,
+        .gs-manuscript-inner {
           animation: none !important;
         }
       }
@@ -2585,14 +3017,372 @@
     });
   }
 
+  function setupManuscriptScroll(section) {
+    if (manuscriptScrollBoundSections.has(section)) return;
+    manuscriptScrollBoundSections.add(section);
+    section.dataset.gsScrollBound = "1";
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const clamp = (value, minimum = 0, maximum = 1) => Math.min(maximum, Math.max(minimum, value));
+    const smoothstep = (value) => {
+      const x = clamp(value);
+      return x * x * (3 - (2 * x));
+    };
+    const render = () => {
+      if (!section.isConnected) return;
+      const rect = section.getBoundingClientRect();
+      const navActive = rect.top <= 70 && rect.bottom > 70;
+      document.body.classList.toggle("gs-manuscript-nav-active", navActive);
+      const distance = Math.max(1, section.offsetHeight - window.innerHeight);
+      const progress = clamp(-rect.top / distance);
+      const masthead = document.querySelector(".gs-site-masthead");
+      const navCanvasOpacity = navActive ? (prefersReducedMotion.matches ? 1 : smoothstep(progress / .16)) : 0;
+      const navInkOpacity = navActive ? (prefersReducedMotion.matches ? 1 : smoothstep((progress - .08) / .16)) : 0;
+      masthead?.style.setProperty("--nav-canvas-opacity", navCanvasOpacity.toFixed(4));
+      masthead?.style.setProperty("--nav-ink-opacity", navInkOpacity.toFixed(4));
+      if (prefersReducedMotion.matches) return;
+      const focus = smoothstep((progress - .12) / .7);
+      const reveal = smoothstep((progress - .955) / .035);
+      const introOpacity = 1 - smoothstep(progress / .28);
+      const sceneOneOpacity = 1 - smoothstep((progress - .18) / .2);
+      const sceneTwoOpacity = smoothstep((progress - .16) / .18) * (1 - smoothstep((progress - .48) / .13));
+      const sceneThreeOpacity = smoothstep((progress - .48) / .13) * (1 - smoothstep((progress - .67) / .11));
+      const sceneFourOpacity = smoothstep((progress - .68) / .11) * (1 - smoothstep((progress - .82) / .09));
+      const scenePaperOpacity = smoothstep((progress - .82) / .08) * (1 - smoothstep((progress - .94) / .025));
+      const sceneTurnTransition = smoothstep((progress - .64) / .16);
+      const cameraTurn = smoothstep((progress - .78) / .08);
+      const readerFocus = smoothstep((progress - .958) / .04);
+      const captionFocus = smoothstep((progress - .982) / .015);
+      const controlsFocus = smoothstep((progress - .986) / .012);
+      const sceneOneScale = 1 + (.07 * smoothstep(progress / .4));
+      const sceneTwoScale = 1.02 + (.09 * smoothstep((progress - .16) / .56));
+      const sceneThreeScale = 1.01 + (.055 * smoothstep((progress - .48) / .3));
+      const sceneFourScale = 1.01 + (.025 * smoothstep((progress - .68) / .32)) + (.1 * cameraTurn);
+      const scenePaperScale = 1 + (.045 * smoothstep((progress - .84) / .1));
+      const sceneTwoX = window.innerWidth * -.018 * smoothstep((progress - .46) / .16);
+      const sceneThreeX = window.innerWidth * -.035 * sceneTurnTransition;
+      const sceneFourEnterX = window.innerWidth * .045 * (1 - sceneTurnTransition);
+      const sceneTurnX = window.innerWidth * .018 * cameraTurn;
+      const sceneTurnY = window.innerHeight * -.035 * cameraTurn;
+      const sceneTurnRotate = -.32 * cameraTurn;
+      const verticalShift = -10 * focus;
+      const brightness = .8 + (.08 * focus);
+      const shadeOpacity = .42 + (.58 * focus);
+      const stageY = 24 * (1 - reveal);
+      const stageScale = .97 + (.03 * reveal);
+      const introY = -18 * (1 - introOpacity);
+      const viewportWidth = window.innerWidth;
+      const startWidth = viewportWidth <= 700 ? Math.min(viewportWidth * .9, 460) : Math.min(650, viewportWidth * .5);
+      const finalWidth = Math.min(viewportWidth <= 700 ? 510 : 720, viewportWidth - (viewportWidth <= 700 ? 28 : 64));
+      const startLeft = (viewportWidth - startWidth) / 2;
+      const finalLeft = (viewportWidth - finalWidth) / 2;
+      const readerLeft = startLeft + ((finalLeft - startLeft) * readerFocus);
+      const readerWidth = startWidth + ((finalWidth - startWidth) * readerFocus);
+      const startImageHeight = Math.min(window.innerHeight * (viewportWidth <= 700 ? .54 : .66), viewportWidth <= 700 ? 440 : 610);
+      const finalImageHeight = Math.min(window.innerHeight * (viewportWidth <= 700 ? .5 : .54), viewportWidth <= 700 ? 420 : 500);
+      const readerImageHeight = startImageHeight + ((finalImageHeight - startImageHeight) * readerFocus);
+      const startBottom = viewportWidth <= 700 ? 90 : 82;
+      const finalBottom = viewportWidth <= 700 ? 96 : 96;
+      const readerBottom = startBottom + ((finalBottom - startBottom) * readerFocus);
+      section.style.setProperty("--scene-one-opacity", sceneOneOpacity.toFixed(4));
+      section.style.setProperty("--scene-two-opacity", sceneTwoOpacity.toFixed(4));
+      section.style.setProperty("--scene-three-opacity", sceneThreeOpacity.toFixed(4));
+      section.style.setProperty("--scene-four-opacity", sceneFourOpacity.toFixed(4));
+      section.style.setProperty("--scene-paper-opacity", scenePaperOpacity.toFixed(4));
+      section.style.setProperty("--scene-one-scale", sceneOneScale.toFixed(4));
+      section.style.setProperty("--scene-two-scale", sceneTwoScale.toFixed(4));
+      section.style.setProperty("--scene-three-scale", sceneThreeScale.toFixed(4));
+      section.style.setProperty("--scene-four-scale", sceneFourScale.toFixed(4));
+      section.style.setProperty("--scene-paper-scale", scenePaperScale.toFixed(4));
+      section.style.setProperty("--scene-two-x", `${sceneTwoX.toFixed(2)}px`);
+      section.style.setProperty("--scene-three-x", `${sceneThreeX.toFixed(2)}px`);
+      section.style.setProperty("--scene-four-enter-x", `${sceneFourEnterX.toFixed(2)}px`);
+      section.style.setProperty("--scene-turn-x", `${sceneTurnX.toFixed(2)}px`);
+      section.style.setProperty("--scene-turn-y", `${sceneTurnY.toFixed(2)}px`);
+      section.style.setProperty("--scene-turn-rotate", `${sceneTurnRotate.toFixed(3)}deg`);
+      section.style.setProperty("--reader-left", `${readerLeft.toFixed(2)}px`);
+      section.style.setProperty("--reader-width", `${readerWidth.toFixed(2)}px`);
+      section.style.setProperty("--reader-image-height", `${readerImageHeight.toFixed(2)}px`);
+      section.style.setProperty("--reader-bottom", `${readerBottom.toFixed(2)}px`);
+      section.style.setProperty("--reader-rotate", `${(-.18 * (1 - readerFocus)).toFixed(3)}deg`);
+      section.style.setProperty("--reader-tilt", `${(7 * (1 - readerFocus)).toFixed(2)}deg`);
+      section.style.setProperty("--reader-z-rotate", `${(-.8 * (1 - readerFocus)).toFixed(2)}deg`);
+      section.style.setProperty("--reader-lift-scale", `${(.96 + (.04 * readerFocus)).toFixed(4)}`);
+      section.style.setProperty("--reader-caption-opacity", captionFocus.toFixed(4));
+      section.style.setProperty("--reader-controls-opacity", controlsFocus.toFixed(4));
+      section.style.setProperty("--reader-controls-y", `${(12 * (1 - controlsFocus)).toFixed(2)}px`);
+      section.style.setProperty("--scene-y", `${verticalShift.toFixed(2)}px`);
+      section.style.setProperty("--scene-focus", focus.toFixed(4));
+      section.style.setProperty("--scene-brightness", brightness.toFixed(4));
+      section.style.setProperty("--shade-opacity", shadeOpacity.toFixed(4));
+      section.style.setProperty("--atmosphere-opacity", focus.toFixed(4));
+      section.style.setProperty("--stage-reveal", reveal.toFixed(4));
+      section.style.setProperty("--stage-y", `${stageY.toFixed(2)}px`);
+      section.style.setProperty("--stage-scale", stageScale.toFixed(4));
+      section.style.setProperty("--intro-opacity", introOpacity.toFixed(4));
+      section.style.setProperty("--intro-y", `${introY.toFixed(2)}px`);
+    };
+    const requestRender = render;
+    window.addEventListener("scroll", requestRender, { passive: true });
+    document.addEventListener("scroll", requestRender, { passive: true, capture: true });
+    document.scrollingElement?.addEventListener("scroll", requestRender, { passive: true });
+    window.addEventListener("resize", requestRender, { passive: true });
+    prefersReducedMotion.addEventListener?.("change", requestRender);
+    const scrollSafetyTimer = window.setInterval(() => {
+      if (!section.isConnected) {
+        document.body.classList.remove("gs-manuscript-nav-active");
+        window.clearInterval(scrollSafetyTimer);
+        return;
+      }
+      const rect = section.getBoundingClientRect();
+      if (rect.bottom > -window.innerHeight && rect.top < window.innerHeight * 1.5) render();
+    }, 50);
+    render();
+  }
+
   function ensureManuscriptNav() {
     const awardLink = document.querySelector('header nav a[href="#awards"], nav a[href="#awards"]');
+    awardLink?.closest("header")?.classList.add("gs-site-masthead");
     if (!awardLink || document.querySelector('a[href="#manuscripts"]')) return;
     const link = awardLink.cloneNode(false);
     link.href = "#manuscripts";
     link.textContent = "手稿";
     awardLink.before(link);
   }
+
+  function mountPharmacyPortal() {
+    const awards = document.querySelector("#awards");
+    if (!awards || document.querySelector("#pharmacy-memory")) return;
+
+    if (!document.querySelector("#gs-pharmacy-portal-style")) {
+      const style = document.createElement("style");
+      style.id = "gs-pharmacy-portal-style";
+      style.textContent = `
+        .gs-pharmacy-portal { position:relative; min-height:min(100svh,56.25vw); overflow:hidden; display:grid; place-items:center; isolation:isolate; background:#24271f; color:#f2e9d2; }
+        .gs-pharmacy-portal::before { content:""; position:absolute; inset:0; z-index:-2; background:url("pharmacy/assets/pharmacy-exterior.png?v=20260919d") center/114% auto no-repeat; filter:saturate(.82) brightness(.9); transform:scale(1.004); transition:transform 1.4s cubic-bezier(.2,.8,.2,1),filter .8s; }
+        .gs-pharmacy-portal::after { content:""; position:absolute; inset:0; z-index:-1; background:linear-gradient(90deg,rgba(18,20,16,.42),rgba(18,20,16,.08) 58%,rgba(18,20,16,.22)),linear-gradient(0deg,rgba(16,18,14,.3),transparent 58%); }
+        .gs-pharmacy-portal:hover::before { transform:scale(1.014); filter:saturate(.86) brightness(.94); }
+        .gs-pharmacy-portal-inner { width:min(1120px,88vw); padding:clamp(54px,9vw,110px) 0; }
+        .gs-pharmacy-portal-kicker { display:block; margin-bottom:18px; color:#d8c69d; font-size:12px; letter-spacing:.3em; }
+        .gs-pharmacy-portal h2 { max-width:620px; margin:0 0 18px; color:#f3ead5; font:400 clamp(38px,6vw,76px)/1.24 var(--font-poetic,"DFKai-SB",serif); letter-spacing:.08em; }
+        .gs-pharmacy-portal p { max-width:520px; margin:0 0 30px; color:rgba(242,233,211,.78); font-size:clamp(14px,1.5vw,18px); line-height:2; letter-spacing:.08em; }
+        .gs-pharmacy-portal-link { display:inline-flex; align-items:center; gap:16px; padding:13px 0; border-bottom:1px solid rgba(235,218,178,.65); color:#f3e7cb; text-decoration:none; font-size:14px; letter-spacing:.18em; transition:gap .3s,color .3s; }
+        .gs-pharmacy-portal-link::after { content:"→"; font-size:22px; font-weight:300; }
+        .gs-pharmacy-portal-link:hover,.gs-pharmacy-portal-link:focus-visible { gap:24px; color:#fff7e4; }
+        @media(max-width:680px){ .gs-pharmacy-portal{min-height:520px;place-items:end center}.gs-pharmacy-portal::before{background-size:auto 100%;background-position:54% center}.gs-pharmacy-portal-inner{padding:70px 0}.gs-pharmacy-portal h2{font-size:42px}.gs-pharmacy-portal p{font-size:14px} }
+      `;
+      document.head.append(style);
+    }
+
+    const section = document.createElement("section");
+    section.id = "pharmacy-memory";
+    section.className = "gs-pharmacy-portal";
+    section.innerHTML = `
+      <div class="gs-pharmacy-portal-inner">
+        <span class="gs-pharmacy-portal-kicker">時光場景・宗泰藥房</span>
+        <h2>走進他寫詩的地方</h2>
+        <p>一冊詩集、幾張獎狀與留在抽屜裡的回聲，都藏在昔日藥房的光影之中。</p>
+        <a class="gs-pharmacy-portal-link" href="pharmacy/index.html?entry=interior" target="_top">進入宗泰藥房</a>
+      </div>`;
+    awards.before(section);
+
+    const awardLink = document.querySelector('header nav a[href="#awards"], nav a[href="#awards"]');
+    if (awardLink && !document.querySelector('a[href="#pharmacy-memory"]')) {
+      const link = awardLink.cloneNode(false);
+      link.href = "#pharmacy-memory";
+      link.textContent = "藥房";
+      awardLink.before(link);
+    }
+  }
+
+  function ensureMemoryExperienceStyle() {
+    if (document.querySelector("#gs-memory-experience-style")) return;
+    const style = document.createElement("style");
+    style.id = "gs-memory-experience-style";
+    style.textContent = `
+      .gs-ink-hero-stage { position:relative !important; isolation:isolate; overflow:hidden !important; }
+      .gs-ink-hero-stage::before,
+      .gs-ink-hero-stage::after { content:""; position:absolute; inset:-14%; pointer-events:none; }
+      .gs-ink-hero-stage::before {
+        z-index:0;
+        background:
+          radial-gradient(ellipse 43% 27% at 6% 30%, rgba(86,104,101,.23) 0 24%, rgba(108,123,117,.12) 43%, transparent 72%),
+          radial-gradient(ellipse 52% 28% at 91% 25%, rgba(78,99,97,.21) 0 20%, rgba(111,128,122,.1) 45%, transparent 74%),
+          radial-gradient(ellipse 62% 27% at 48% 88%, rgba(93,112,106,.17) 0 17%, rgba(117,132,124,.08) 43%, transparent 75%);
+        mix-blend-mode:normal;
+        filter:blur(22px) saturate(.7);
+        opacity:.78;
+        transform:scale(1.03);
+        animation:gs-ink-breathe 13s ease-in-out infinite alternate;
+      }
+      .gs-ink-hero-stage::after {
+        z-index:1;
+        background:
+          radial-gradient(ellipse at 50% 48%, rgba(249,245,233,.24) 0 26%, transparent 58%),
+          linear-gradient(105deg, rgba(255,251,239,.3), transparent 36% 68%, rgba(255,250,236,.24));
+        mix-blend-mode:screen;
+        animation:gs-paper-light 10s ease-in-out infinite alternate;
+      }
+      .gs-ink-hero-stage > * { position:relative; z-index:2; }
+      .gs-ink-hero-stage #hw-hero { z-index:3; filter:drop-shadow(0 14px 18px rgba(47,40,30,.12)); transform:translateZ(0); }
+      .gs-ink-hero-stage .gs-calligraphy-hero::before { display:none !important; }
+      .gs-plum-ink-flow { position:absolute; inset:0; width:100%; height:100%; z-index:1; pointer-events:none; overflow:hidden; opacity:.78; mix-blend-mode:multiply; }
+      .gs-plum-ink-flow .gs-ink-blossom { --gs-plum-delay:0s; color:rgba(61,71,62,.22); opacity:1; transform-box:fill-box; transform-origin:center; animation:gs-plum-drift 12.8s ease-in-out var(--gs-plum-delay) infinite; }
+      .gs-plum-ink-flow .gs-plum-one { --gs-plum-delay:-1s; }
+      .gs-plum-ink-flow .gs-plum-two { --gs-plum-delay:-9.2s; }
+      .gs-plum-ink-flow .gs-plum-three { --gs-plum-delay:-4.6s; }
+      .gs-plum-ink-flow .gs-plum-four { --gs-plum-delay:-11.1s; }
+      .gs-plum-ink-flow .gs-plum-five { --gs-plum-delay:-7s; }
+      .gs-plum-ink-flow .gs-plum-six { --gs-plum-delay:-2.8s; }
+      .gs-plum-ink-flow .gs-plum-seven { --gs-plum-delay:-10.1s; }
+      .gs-plum-ink-flow .gs-ink-blossom ellipse { fill:currentColor; opacity:0; rx:2px; ry:2px; filter:url(#gs-plum-bloom-soft); animation:gs-plum-petal-spread 12.8s cubic-bezier(.2,.72,.25,1) var(--gs-plum-delay) infinite; }
+      .gs-plum-ink-flow .gs-ink-blossom circle { fill:rgba(41,52,43,.38); r:1px; opacity:0; filter:url(#gs-plum-bloom-soft); animation:gs-plum-drop-spread 12.8s ease-out var(--gs-plum-delay) infinite; }
+      @keyframes gs-ink-breathe { from{transform:translate3d(-1%,.35%,0) scale(1.02);filter:blur(20px) saturate(.68)} to{transform:translate3d(1.2%,-.55%,0) scale(1.065);filter:blur(25px) saturate(.78)} }
+      @keyframes gs-paper-light { from{opacity:.68;transform:translateX(-1%)} to{opacity:1;transform:translateX(1%)} }
+      @keyframes gs-plum-drift { 0%,100%{transform:translate3d(-7px,10px,0) rotate(-3deg) scale(.94)} 50%{transform:translate3d(7px,-8px,0) rotate(2deg) scale(1.02)} }
+      @keyframes gs-plum-drop-spread { 0%,3%{opacity:0;r:1px;filter:blur(0)} 7%{opacity:.78;r:7px;filter:blur(.2px)} 13%{opacity:.68;r:10px;filter:blur(2px)} 24%{opacity:.38;r:8px;filter:blur(1px)} 67%{opacity:.28;r:8px} 86%,100%{opacity:0;r:6px;filter:blur(4px)} }
+      @keyframes gs-plum-petal-spread { 0%,9%{opacity:0;rx:2px;ry:2px;filter:blur(5px)} 15%{opacity:.2;rx:7px;ry:9px;filter:blur(4px)} 29%{opacity:.62;rx:17px;ry:27px;filter:blur(2px)} 42%,67%{opacity:.78;rx:19px;ry:31px;filter:blur(.3px)} 86%,100%{opacity:0;rx:22px;ry:34px;filter:blur(5px)} }
+
+      .gs-plum-memory { display:none !important; }
+      .gs-plum-memory::before { content:""; position:absolute; left:10%; top:50%; width:24%; height:1px; background:linear-gradient(90deg,rgba(111,98,73,.22),transparent); }
+      .gs-plum-memory-kicker { position:absolute; left:10%; top:calc(50% - 42px); margin:0; color:#8b7c63; font-size:11px; letter-spacing:.28em; opacity:calc(.28 + var(--gs-plum-photo) * .72); }
+      .gs-plum-branch { position:absolute; inset:0 0 0 auto; width:min(78vw,1080px); height:100%; overflow:visible; }
+      .gs-plum-lineart { position:absolute; inset:0; width:100%; height:100%; opacity:var(--gs-plum-line); transition:opacity .12s linear; }
+      .gs-plum-lineart path { fill:none; stroke:#756d61; stroke-width:3.2; stroke-linecap:round; stroke-linejoin:round; }
+      .gs-plum-lineart .gs-plum-twig { stroke-width:1.45; opacity:.72; }
+      .gs-plum-lineart .gs-plum-blossom ellipse { fill:#eee7d7; stroke:#8f8779; stroke-width:1.3; }
+      .gs-plum-lineart .gs-plum-blossom circle { fill:#b3a88f; stroke:none; }
+      .gs-plum-photo-bloom { position:absolute; width:clamp(104px,11.5vw,156px); aspect-ratio:1; opacity:var(--gs-plum-photo); background:url("assets/plum-blossom-closeup.jpg?v=20260809a") 58% 48%/cover no-repeat; transform:scale(calc(.84 + var(--gs-plum-photo) * .16)) rotate(calc((1 - var(--gs-plum-photo)) * -5deg)); will-change:opacity,transform; -webkit-mask-image:radial-gradient(ellipse 31% 42% at 50% 25%,#000 0 74%,rgba(0,0,0,.65) 79%,transparent 86%),radial-gradient(ellipse 31% 42% at 74% 43%,#000 0 74%,rgba(0,0,0,.65) 79%,transparent 86%),radial-gradient(ellipse 31% 42% at 65% 72%,#000 0 74%,rgba(0,0,0,.65) 79%,transparent 86%),radial-gradient(ellipse 31% 42% at 35% 72%,#000 0 74%,rgba(0,0,0,.65) 79%,transparent 86%),radial-gradient(ellipse 31% 42% at 26% 43%,#000 0 74%,rgba(0,0,0,.65) 79%,transparent 86%); mask-image:radial-gradient(ellipse 31% 42% at 50% 25%,#000 0 74%,rgba(0,0,0,.65) 79%,transparent 86%),radial-gradient(ellipse 31% 42% at 74% 43%,#000 0 74%,rgba(0,0,0,.65) 79%,transparent 86%),radial-gradient(ellipse 31% 42% at 65% 72%,#000 0 74%,rgba(0,0,0,.65) 79%,transparent 86%),radial-gradient(ellipse 31% 42% at 35% 72%,#000 0 74%,rgba(0,0,0,.65) 79%,transparent 86%),radial-gradient(ellipse 31% 42% at 26% 43%,#000 0 74%,rgba(0,0,0,.65) 79%,transparent 86%); filter:drop-shadow(0 7px 10px rgba(45,52,39,.13)) saturate(.76) contrast(.94) brightness(1.08); }
+      .gs-plum-photo-bloom-one { left:64%; top:16%; }
+
+      #about.gs-author-story { position:relative; isolation:isolate; overflow:hidden; padding-block:clamp(84px,10vw,150px) !important; }
+      #about.gs-author-story::before { content:""; position:absolute; width:42vw; height:42vw; max-width:620px; max-height:620px; right:-10%; top:8%; border-radius:50%; background:radial-gradient(circle,rgba(111,125,101,.13),transparent 68%); z-index:-1; }
+      #about .gs-author-layout { position:relative; display:grid !important; grid-template-columns:minmax(340px,.82fr) minmax(0,1.18fr) !important; align-items:center !important; gap:clamp(52px,8vw,128px) !important; width:min(1180px,91vw); margin-inline:auto; }
+      #about .gs-author-media { width:100% !important; margin:0 !important; transform:rotate(-.7deg); filter:drop-shadow(0 25px 28px rgba(45,39,29,.23)); }
+      #about .gs-author-image-frame { position:relative; overflow:hidden; aspect-ratio:.78; clip-path:none; border-radius:18% 9% 16% 11% / 11% 17% 9% 15%; background:#ddd3bd; }
+      #about .gs-author-image-frame::before { content:""; position:absolute; inset:0; z-index:2; pointer-events:none; background:linear-gradient(112deg,rgba(244,237,219,.16),transparent 28% 72%,rgba(83,75,60,.12)),radial-gradient(ellipse at 8% 48%,rgba(237,228,207,.2),transparent 20%),radial-gradient(ellipse at 93% 22%,rgba(237,228,207,.18),transparent 19%); mix-blend-mode:soft-light; }
+      #about .gs-author-image-frame::after { content:"沿著光影，走回詩的來處"; position:absolute; right:18px; bottom:15px; padding:7px 11px; background:rgba(237,229,210,.76); color:#665b49; font-size:11px; letter-spacing:.18em; backdrop-filter:blur(4px); }
+      #about img.gs-author-photo { width:100% !important; height:100% !important; object-fit:cover !important; object-position:52% 52%; filter:saturate(.72) sepia(.08) contrast(.95); transform:scale(1.015); }
+      #about .gs-author-layout > :not(.gs-author-media) { position:relative; z-index:2; }
+
+      body.gs-pharmacy-nav-active .gs-site-masthead {
+        position:sticky !important; top:0 !important; z-index:240 !important; isolation:isolate;
+        background:transparent !important;
+        border-bottom-color:transparent !important; box-shadow:none !important;
+        backdrop-filter:none !important;
+      }
+      body.gs-pharmacy-nav-active .gs-site-masthead > a,
+      body.gs-pharmacy-nav-active .gs-site-masthead > nav {
+        transform:translateY(clamp(8px,.9vw,16px));
+        transition:transform .32s ease,opacity .28s linear !important;
+      }
+      body.gs-pharmacy-nav-active .gs-site-masthead::before {
+        content:none !important;
+        display:none !important;
+      }
+      body.gs-pharmacy-nav-active .gs-site-masthead a,
+      body.gs-pharmacy-nav-active .gs-site-masthead button,
+      body.gs-pharmacy-nav-active .gs-site-masthead .gs-calligraphy-brand { color:rgba(250,244,225,.98) !important; -webkit-text-fill-color:currentColor !important; text-shadow:0 1px 2px rgba(23,35,28,.72),0 0 8px rgba(250,244,225,.16) !important; opacity:var(--gs-pharmacy-nav-ink,1) !important; transition:opacity .28s linear !important; }
+      @media(max-width:700px){
+        .gs-plum-memory { min-height:390px; }
+        .gs-plum-memory::before { left:7%; width:19%; }
+        .gs-plum-memory-kicker { left:7%; top:47%; writing-mode:vertical-rl; }
+        .gs-plum-branch { width:92vw; right:-18vw; }
+        #about .gs-author-layout { display:block !important; }
+        #about .gs-author-media { width:100% !important; margin-bottom:42px !important; transform:none; }
+        #about .gs-author-image-frame { aspect-ratio:.82; }
+        #about .gs-author-image-frame::after { right:10px; bottom:10px; }
+        .gs-ink-hero-stage::before { opacity:.68; filter:blur(18px) saturate(.7); }
+        .gs-plum-ink-flow { inset:0; width:100%; opacity:.68; }
+      }
+      @media(prefers-reduced-motion:reduce){ .gs-ink-hero-stage::before,.gs-ink-hero-stage::after,.gs-plum-ink-flow *{animation:none !important;stroke-dashoffset:0 !important;opacity:1 !important} }
+    `;
+    document.head.append(style);
+  }
+
+  function enhanceMemoryExperience() {
+    ensureMemoryExperienceStyle();
+    const hero = document.querySelector("#hw-hero");
+    const heroStage = hero?.closest("section") || hero?.parentElement;
+    heroStage?.classList.remove("gs-ink-hero-stage");
+    heroStage?.querySelectorAll(".gs-plum-ink-flow").forEach((ink) => ink.remove());
+
+    const about = document.querySelector("#about");
+    const photo = about?.querySelector('img[alt*="詩人"], img');
+    if (about && photo) {
+      about.classList.add("gs-author-story");
+      photo.src = "assets/author-back-view.jpg?v=20260809a";
+      photo.classList.add("gs-author-photo");
+      const frame = photo.parentElement;
+      const media = frame?.parentElement;
+      const layout = media?.parentElement;
+      frame?.classList.add("gs-author-image-frame");
+      media?.classList.add("gs-author-media");
+      layout?.classList.add("gs-author-layout");
+    }
+
+    document.querySelector("#plum-memory")?.remove();
+    if (false && about && !document.querySelector("#plum-memory")) {
+      const memory = document.createElement("section");
+      memory.id = "plum-memory";
+      memory.className = "gs-plum-memory";
+      memory.setAttribute("aria-label", "梅園記憶");
+      memory.innerHTML = `
+        <p class="gs-plum-memory-kicker">梅開時，詩也醒來</p>
+        <div class="gs-plum-branch" role="img" aria-label="線稿白梅逐漸轉為真實梅花">
+          <svg class="gs-plum-lineart" viewBox="0 0 1000 520" aria-hidden="true">
+            <path d="M1035 52 C866 91 752 145 648 213 C541 283 418 319 214 382 C143 404 82 432 24 478"/>
+            <path class="gs-plum-twig" d="M760 149 C706 106 667 73 628 30 M642 217 C618 164 592 125 548 88 M509 283 C468 235 433 210 384 187 M390 326 C347 279 318 249 280 210 M261 370 C215 346 174 337 130 339"/>
+            <g class="gs-plum-blossom" transform="translate(729 132)"><ellipse cy="-13" rx="8" ry="14"/><ellipse cy="-13" rx="8" ry="14" transform="rotate(72)"/><ellipse cy="-13" rx="8" ry="14" transform="rotate(144)"/><ellipse cy="-13" rx="8" ry="14" transform="rotate(216)"/><ellipse cy="-13" rx="8" ry="14" transform="rotate(288)"/><circle r="3.5"/></g>
+            <g class="gs-plum-blossom" transform="translate(621 202) scale(.82)"><ellipse cy="-13" rx="8" ry="14"/><ellipse cy="-13" rx="8" ry="14" transform="rotate(72)"/><ellipse cy="-13" rx="8" ry="14" transform="rotate(144)"/><ellipse cy="-13" rx="8" ry="14" transform="rotate(216)"/><ellipse cy="-13" rx="8" ry="14" transform="rotate(288)"/><circle r="3.5"/></g>
+            <g class="gs-plum-blossom" transform="translate(526 270) scale(.68)"><ellipse cy="-13" rx="8" ry="14"/><ellipse cy="-13" rx="8" ry="14" transform="rotate(72)"/><ellipse cy="-13" rx="8" ry="14" transform="rotate(144)"/><ellipse cy="-13" rx="8" ry="14" transform="rotate(216)"/><ellipse cy="-13" rx="8" ry="14" transform="rotate(288)"/><circle r="3.5"/></g>
+            <g class="gs-plum-blossom" transform="translate(345 343) scale(.76)"><ellipse cy="-13" rx="8" ry="14"/><ellipse cy="-13" rx="8" ry="14" transform="rotate(72)"/><ellipse cy="-13" rx="8" ry="14" transform="rotate(144)"/><ellipse cy="-13" rx="8" ry="14" transform="rotate(216)"/><ellipse cy="-13" rx="8" ry="14" transform="rotate(288)"/><circle r="3.5"/></g>
+          </svg>
+          <div class="gs-plum-photo-bloom gs-plum-photo-bloom-one" aria-hidden="true"></div>
+        </div>`;
+      about.before(memory);
+    }
+  }
+
+  function syncPlumMemoryDepth() {
+    const memory = document.querySelector("#plum-memory");
+    if (!memory) return;
+    const rect = memory.getBoundingClientRect();
+    const raw = (window.innerHeight * .82 - rect.top) / (window.innerHeight + rect.height * .35);
+    const progress = Math.max(0, Math.min(1, raw));
+    const eased = progress * progress * (3 - 2 * progress);
+    memory.style.setProperty("--gs-plum-photo", eased.toFixed(3));
+    memory.style.setProperty("--gs-plum-line", Math.max(.32, 1 - eased * .76).toFixed(3));
+  }
+
+  function syncPharmacyNav() {
+    const section = document.querySelector("#pharmacy-memory");
+    const masthead = document.querySelector(".gs-site-masthead") || document.querySelector("header");
+    if (!section || !masthead) return;
+    masthead.classList.add("gs-site-masthead");
+    const rect = section.getBoundingClientRect();
+    const mastheadHeight = masthead.getBoundingClientRect().height || 72;
+    const isInsidePharmacy = rect.top <= mastheadHeight && rect.bottom > mastheadHeight;
+    const fadeDelay = Math.max(84, window.innerHeight * .1);
+    const fadeDistance = Math.max(150, window.innerHeight * .22);
+    const fadeProgress = Math.max(0, Math.min(1, (mastheadHeight - rect.top - fadeDelay) / fadeDistance));
+    masthead.style.setProperty("--gs-pharmacy-nav-ink", (1 - fadeProgress).toFixed(3));
+    document.body.classList.toggle("gs-pharmacy-nav-active", isInsidePharmacy);
+  }
+
+  function removeLegacyManuscripts() {
+    document.querySelector("#manuscripts")?.remove();
+    document.querySelectorAll('a[href="#manuscripts"]').forEach((link) => link.remove());
+    document.body.classList.remove("gs-manuscript-nav-active");
+  }
+
+function removeLegacyHonors() {
+  const awards = document.querySelector("#awards");
+  if (awards) awards.hidden = true;
+  document.querySelectorAll("header nav a, nav a").forEach((link) => {
+    const href = link.getAttribute("href");
+    if (href === "#awards" || link.textContent.trim() === "榮譽") link.remove();
+  });
+}
 
   function mountManuscriptSection() {
     ensureManuscriptStyle();
@@ -2605,40 +3395,48 @@
       section.id = "manuscripts";
       section.className = "gs-manuscripts";
       section.innerHTML = `
-        <div class="gs-manuscript-inner">
-          <header class="gs-manuscript-heading">
-            <div>
-              <span class="gs-manuscript-kicker">手稿珍藏</span>
-              <h2>紙上仍有他的手溫</h2>
-            </div>
-            <p>這些手稿不依年月排列，而循著墨色、紙痕與內容的節奏相遇。畫面會緩緩流轉，輕觸手稿即可放大閱讀。</p>
+        <div class="gs-manuscript-sticky">
+          <div class="gs-manuscript-backdrop gs-manuscript-scene-far" aria-hidden="true"></div>
+          <div class="gs-manuscript-backdrop gs-manuscript-scene-threshold" aria-hidden="true"></div>
+          <div class="gs-manuscript-backdrop gs-manuscript-scene-interior" aria-hidden="true"></div>
+          <div class="gs-manuscript-backdrop gs-manuscript-scene-desk" aria-hidden="true"></div>
+          <div class="gs-manuscript-backdrop gs-manuscript-scene-paper" aria-hidden="true"></div>
+          <div class="gs-manuscript-shade" aria-hidden="true"></div>
+          <div class="gs-manuscript-atmosphere" aria-hidden="true"></div>
+          <header class="gs-manuscript-intro">
+            <span class="gs-manuscript-kicker">手稿珍藏・宗泰藥房</span>
+            <h2>紙上仍有他的手溫</h2>
+            <p>從騎樓望進舊藥房，沿著光線慢慢走近。那張桌、那支筆，仍替一頁頁詩稿留著位置。</p>
+            <span class="gs-manuscript-enter-cue">往下走進時光</span>
           </header>
-          <div class="gs-manuscript-stage">
-            <figure class="gs-manuscript-sheet">
-              <button type="button" class="gs-manuscript-image-button">
-                <img class="gs-manuscript-image" loading="eager" decoding="async" alt="">
-              </button>
-              <figcaption class="gs-manuscript-caption">
-                <span class="gs-manuscript-kind"></span>
+          <div class="gs-manuscript-inner">
+            <div class="gs-manuscript-stage">
+              <figure class="gs-manuscript-sheet">
+                <button type="button" class="gs-manuscript-image-button">
+                  <img class="gs-manuscript-image" loading="eager" decoding="async" alt="">
+                </button>
+                <figcaption class="gs-manuscript-caption">
+                  <span class="gs-manuscript-kind"></span>
+                  <span>
+                    <strong class="gs-manuscript-title"></strong>
+                    <span class="gs-manuscript-note"></span>
+                  </span>
+                </figcaption>
+              </figure>
+              <img class="gs-manuscript-pen" src="assets/manuscript-pen.png?v=20260730k" alt="" aria-hidden="true">
+            </div>
+            <nav class="gs-manuscript-controls" aria-label="手稿翻頁">
+              <button type="button" class="gs-manuscript-arrow gs-manuscript-prev" aria-label="上一頁手稿">‹</button>
+              <span class="gs-manuscript-status">
                 <span>
-                  <strong class="gs-manuscript-title"></strong>
-                  <span class="gs-manuscript-note"></span>
+                  <span class="gs-manuscript-count" aria-live="polite"></span>
+                  <span class="gs-manuscript-progress" aria-hidden="true"></span>
                 </span>
-              </figcaption>
-            </figure>
-            <img class="gs-manuscript-pen" src="assets/manuscript-pen.png?v=20260730k" alt="" aria-hidden="true">
-          </div>
-          <nav class="gs-manuscript-controls" aria-label="手稿翻頁">
-            <button type="button" class="gs-manuscript-arrow gs-manuscript-prev" aria-label="上一頁手稿">‹</button>
-            <span class="gs-manuscript-status">
-              <span>
-                <span class="gs-manuscript-count" aria-live="polite"></span>
-                <span class="gs-manuscript-progress" aria-hidden="true"></span>
+                <button type="button" class="gs-manuscript-play" aria-label="暫停手稿幻燈片">Ⅱ</button>
               </span>
-              <button type="button" class="gs-manuscript-play" aria-label="暫停手稿幻燈片">Ⅱ</button>
-            </span>
-            <button type="button" class="gs-manuscript-arrow gs-manuscript-next" aria-label="下一頁手稿">›</button>
-          </nav>
+              <button type="button" class="gs-manuscript-arrow gs-manuscript-next" aria-label="下一頁手稿">›</button>
+            </nav>
+          </div>
         </div>
         <div class="gs-manuscript-lightbox" role="dialog" aria-modal="true" aria-label="手稿放大閱讀" aria-hidden="true">
           <button type="button" class="gs-manuscript-lightbox-close" aria-label="關閉手稿">×</button>
@@ -2650,6 +3448,7 @@
       renderManuscriptPage(section);
     }
     setupManuscriptInteractions(section);
+    setupManuscriptScroll(section);
   }
 
   function releaseGoTopPetals(button) {
@@ -2743,6 +3542,7 @@
   window.addEventListener("message", (event) => {
     if (event.data?.type === "gs-go-top") goTop();
     if (event.data?.type === "gs-play-hero") {
+      document.documentElement.dataset.gsHeroPlayRequested = "1";
       document.querySelector("#hw-hero")?.classList.remove("gs-hero-waiting");
     }
   });
@@ -2853,24 +3653,37 @@
   let announced = false;
   const timer = window.setInterval(() => {
     attempts += 1;
-    if (!announced && document.querySelector("#poems h3")) {
+    // The parent loader must not fade until the legacy HanziWriter nodes have
+    // been replaced as one complete hero. Calling this here also removes the
+    // old interval-order race where gs-ready could fire one tick too early.
+    styleHeroTitle();
+    const heroRendered = document.querySelector("#hw-hero.gs-hero-rendered");
+    if (!announced && heroRendered && document.querySelector("#poems h3")) {
       announced = true;
       window.parent?.postMessage({ type: "gs-ready" }, "*");
     }
-    if (attempts > 180) {
+    if (attempts > 1200) {
       window.clearInterval(timer);
-      if (!announced) window.parent?.postMessage({ type: "gs-ready" }, "*");
+      if (!announced && heroRendered) window.parent?.postMessage({ type: "gs-ready" }, "*");
     }
   }, 250);
 
   window.setInterval(mountModalIllustration, 250);
   window.setInterval(styleMasthead, 250);
   window.setInterval(styleHeroTitle, 250);
+  window.setInterval(enhanceMemoryExperience, 350);
   window.setInterval(mountLibraryBrowser, 400);
   window.setInterval(mountInlineReader, 120);
   window.setInterval(fixAwardModal, 300);
   window.setInterval(setupAwardDrag, 500);
-  window.setInterval(mountManuscriptSection, 500);
+  // 手稿改由藥房場景承接，V1 不再重複建立長篇手稿區。
+  document.querySelector("#manuscripts")?.remove();
+  document.querySelectorAll('a[href="#manuscripts"]').forEach((link) => link.remove());
+  window.setInterval(mountPharmacyPortal, 500);
+  window.setInterval(removeLegacyManuscripts, 350);
+  window.setInterval(removeLegacyHonors, 350);
+  window.addEventListener("scroll", syncPharmacyNav, { passive: true });
+  window.setInterval(syncPharmacyNav, 300);
   window.setInterval(mountVisitorCounter, 700);
   window.setInterval(removeAccountControls, 500);
   window.setInterval(removeMastheadAuthor, 500);

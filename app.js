@@ -3,19 +3,22 @@ const goTop = document.querySelector("#go-top");
 const petals = document.querySelector("#petals");
 const loader = document.querySelector("#site-loader");
 const loaderStartedAt = Date.now();
+const introStorageKey = "gs_intro_seen_2026_09";
+let hasSeenIntro = false;
 let loaderDismissed = false;
 let lastGoTopActivation = 0;
 
 function dismissLoader() {
   if (loaderDismissed) return;
   loaderDismissed = true;
+  frame.contentWindow?.postMessage({ type: "gs-play-hero" }, "*");
+  frame.classList.add("is-ready");
   loader.classList.add("is-ready");
-  window.setTimeout(() => {
-    frame.contentWindow?.postMessage({ type: "gs-play-hero" }, "*");
-  }, 1150);
+  try { localStorage.setItem(introStorageKey, "1"); } catch {}
 }
 
 function prepareCollection() {
+  try { hasSeenIntro = localStorage.getItem(introStorageKey) === "1"; } catch {}
   try {
     const echoResetVersion = "gs_echo_reset_2026_07";
     if (frame.contentWindow.localStorage.getItem(echoResetVersion) !== "1") {
@@ -26,12 +29,13 @@ function prepareCollection() {
   } catch {
     // The collection still works if the browser blocks local storage.
   }
-  frame.src = "standalone.html";
+  frame.src = "standalone.html?v=20260922f";
 }
 
 window.addEventListener("message", (event) => {
   if (event.source === frame.contentWindow && event.data?.type === "gs-ready") {
-    const remaining = Math.max(0, 7600 - (Date.now() - loaderStartedAt));
+    const minimumIntro = hasSeenIntro ? 250 : 1400;
+    const remaining = Math.max(0, minimumIntro - (Date.now() - loaderStartedAt));
     window.setTimeout(dismissLoader, remaining);
   }
 });

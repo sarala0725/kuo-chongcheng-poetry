@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#385346">
+  <title>耕舍詩文集・宗泰藥房時光場景</title>
+  <script>
+    if (new URLSearchParams(location.search).get('entry') === 'interior') {
+      document.documentElement.classList.add('direct-interior-entry');
+    }
+  </script>
+  <link rel="preload" as="image" href="assets/pharmacy-exterior.png?v=20260919d">
+  <link rel="preload" as="image" href="assets/0921pharmacy-interior-clear-counter.png">
+  <link rel="stylesheet" href="styles.css?v=20260922b">
+</head>
+<body>
+  <a class="site-logo" href="#top" aria-label="回到藥房門外">耕舍詩文集</a>
+  <a class="return-link" href="../index.html" aria-label="返回耕舍詩文集">返回詩文集</a>
+
+  <main id="top" class="memory-journey" aria-label="走進宗泰藥房的時光場景">
+    <section class="scene-sticky" aria-label="從店門走進藥房">
+      <div class="scene-layer scene-far" aria-hidden="true"></div>
+      <div class="scene-layer scene-threshold" aria-hidden="true"></div>
+      <div class="scene-layer scene-desk" aria-hidden="true"></div>
+      <div class="scene-layer scene-desk-open" aria-hidden="true"></div>
+      <div class="scene-shade" aria-hidden="true"></div>
+      <div class="sunbeam" aria-hidden="true"></div>
+
+      <div class="intro-copy" aria-hidden="true">
+        <p>郭崇城・詩文紀念網站</p>
+        <h1>宗泰藥房裡<br>留著一冊詩</h1>
+      </div>
+      <div class="scroll-cue" aria-hidden="true"><span></span>往裡走</div>
+
+      <section class="interactive-room" aria-label="藥房內的詩文入口">
+        <div class="awards-wall" aria-label="牆上的榮譽獎狀，可左右滑動">
+          <div class="awards-track">
+            <button class="award-frame lift-one" type="button" data-award="assets/awards/aw1.jpg" aria-label="放大第一張榮譽獎狀"><img src="assets/awards/aw1.jpg" alt="郭崇城榮譽獎狀一"></button>
+            <button class="award-frame lift-two" type="button" data-award="assets/awards/aw2.jpg" aria-label="放大第二張榮譽獎狀"><img src="assets/awards/aw2.jpg" alt="郭崇城榮譽獎狀二"></button>
+            <button class="award-frame lift-three" type="button" data-award="assets/awards/aw3.jpg" aria-label="放大第三張榮譽獎狀"><img src="assets/awards/aw3.jpg" alt="郭崇城榮譽獎狀三"></button>
+            <button class="award-frame lift-four" type="button" data-award="assets/awards/aw4.jpg" aria-label="放大第四張榮譽獎狀"><img src="assets/awards/aw4.jpg" alt="郭崇城榮譽獎狀四"></button>
+            <button class="award-frame" type="button" data-award="assets/awards/aw5.jpg" aria-label="放大第五張榮譽獎狀"><img src="assets/awards/aw5.jpg" alt="郭崇城榮譽獎狀五"></button>
+            <button class="award-frame" type="button" data-award="assets/awards/aw6.jpg" aria-label="放大第六張榮譽獎狀"><img src="assets/awards/aw6.jpg" alt="郭崇城榮譽獎狀六"></button>
+          </div>
+        </div>
+
+        <button class="manuscript-entry" type="button" aria-label="放大閱讀桌上的手稿">
+          <span class="manuscript-fixed-shadow" aria-hidden="true"></span>
+          <img class="manuscript-book-object" src="assets/manuscript-object.png" alt="攤開在桌上的郭崇城手稿">
+          <img class="manuscript-stationary-pen" src="assets/manuscript-object.png" alt="">
+        </button>
+
+      </section>
+    </section>
+  </main>
+
+  <section class="book-dialog" role="dialog" aria-modal="true" aria-labelledby="book-dialog-title" aria-hidden="true">
+    <button class="dialog-close" type="button" aria-label="闔上詩集">×</button>
+    <div class="collection-sheet">
+      <p class="book-kicker">耕舍詩文集・卷帙目錄</p>
+      <h2 id="book-dialog-title">從哪一卷讀起</h2>
+      <div class="collection-list">
+        <button type="button" data-collection="耕舍集"><span>耕舍集</span><small>田園、人生與時代</small></button>
+        <button type="button" data-collection="玉嶺集"><span>玉嶺集</span><small>行旅與山川</small></button>
+        <button type="button" data-collection="玉穎集"><span>玉穎集</span><small>詠物與寄懷</small></button>
+        <button type="button" data-collection="憂時吟"><span>憂時吟</span><small>社會與時事</small></button>
+      </div>
+    </div>
+  </section>
+
+  <section class="manuscript-lightbox" role="dialog" aria-modal="true" aria-label="手稿放大閱讀" aria-hidden="true">
+    <div class="award-viewer manuscript-viewer">
+      <div class="award-viewer-bar">
+        <p><span class="manuscript-current">1</span><span aria-hidden="true"> / </span><span>11</span></p>
+        <button class="manuscript-close award-close" type="button" aria-label="關閉手稿">×</button>
+      </div>
+      <div class="award-stage manuscript-stage">
+        <button class="award-nav manuscript-prev" type="button" aria-label="上一張手稿">‹</button>
+        <figure><img src="../assets/manuscripts/LINE_ALBUM_2026730_260730_1.jpg" alt="郭崇城手稿一"></figure>
+        <button class="award-nav manuscript-next" type="button" aria-label="下一張手稿">›</button>
+      </div>
+      <div class="award-thumbnails manuscript-thumbnails" aria-label="手稿縮圖">
+        <button type="button" data-manuscript-index="0" aria-current="true"><img src="../assets/manuscripts/LINE_ALBUM_2026730_260730_1.jpg" alt=""></button>
+        <button type="button" data-manuscript-index="1"><img src="../assets/manuscripts/LINE_ALBUM_2026730_260730_2.jpg" alt=""></button>
+        <button type="button" data-manuscript-index="2"><img src="../assets/manuscripts/LINE_ALBUM_2026730_260730_3.jpg" alt=""></button>
+        <button type="button" data-manuscript-index="3"><img src="../assets/manuscripts/LINE_ALBUM_2026730_260730_4.jpg" alt=""></button>
+        <button type="button" data-manuscript-index="4"><img src="../assets/manuscripts/LINE_ALBUM_2026730_260730_5.jpg" alt=""></button>
+        <button type="button" data-manuscript-index="5"><img src="../assets/manuscripts/LINE_ALBUM_2026730_260730_6.jpg" alt=""></button>
+        <button type="button" data-manuscript-index="6"><img src="../assets/manuscripts/LINE_ALBUM_2026730_260730_7.jpg" alt=""></button>
+        <button type="button" data-manuscript-index="7"><img src="../assets/manuscripts/LINE_ALBUM_2026730_260730_14.jpg" alt=""></button>
+        <button type="button" data-manuscript-index="8"><img src="../assets/manuscripts/LINE_ALBUM_2026730_260730_15.jpg" alt=""></button>
+        <button type="button" data-manuscript-index="9"><img src="../assets/manuscripts/LINE_ALBUM_2026730_260730_17.jpg" alt=""></button>
+        <button type="button" data-manuscript-index="10"><img src="../assets/manuscripts/LINE_ALBUM_2026730_260730_18.jpg" alt=""></button>
+      </div>
+    </div>
+  </section>
+
+  <section class="legacy-reader" role="dialog" aria-modal="true" aria-labelledby="reader-title" aria-hidden="true">
+    <header><p id="reader-title">耕舍詩文集</p><button class="dialog-close reader-close" type="button" aria-label="關閉閱讀頁">×</button></header>
+    <iframe title="詩文閱讀頁" src="about:blank"></iframe>
+  </section>
+
+  <section class="echo-drawer" role="dialog" aria-modal="true" aria-labelledby="echo-title" aria-hidden="true">
+    <header><p id="echo-title">讀者回聲</p><button class="dialog-close echo-close" type="button" aria-label="關閉讀者回聲">×</button></header>
+    <div class="echo-content">
+      <div class="echo-intro"><small>留在抽屜裡的話</small><h2>你也寫一句吧</h2><p>若這些詩曾觸動你，留下一句你的回聲。</p></div>
+      <form class="echo-form">
+        <label>暱稱<input name="nickname" placeholder="你願意如何被記得"></label>
+        <label>詩題<input name="title" placeholder="無題也好"></label>
+        <label class="echo-body">詩文<textarea name="body" rows="4" placeholder="一句、一段，都可以"></textarea></label>
+        <button type="submit">留下回聲</button>
+      </form>
+      <div class="echo-list" aria-live="polite">
+        <article><time>2026.04</time><h3>致耕舍</h3><p>我沒見過你<br>卻在你的字裡<br>聞到我祖父田裡的味道</p><footer>—— 拾穗的人</footer></article>
+        <article><time>2026.05</time><h3>讀〈問稻〉有感</h3><p>原來彎腰<br>不是認輸<br>是為了，更靠近土地一點</p><footer>—— 小滿</footer></article>
+        <article><time>2026.06</time><h3>回聲</h3><p>你把光留下了<br>我們接著<br>替你照亮回家的路</p><footer>—— 林間</footer></article>
+      </div>
+    </div>
+  </section>
+
+  <div class="award-lightbox" role="dialog" aria-modal="true" aria-label="榮譽獎狀滿版檢視" aria-hidden="true">
+    <div class="award-viewer">
+      <div class="award-viewer-bar">
+        <p><span class="award-current">1</span><span aria-hidden="true"> / </span><span>6</span></p>
+        <button class="award-close" type="button" aria-label="關閉獎狀">×</button>
+      </div>
+      <div class="award-stage">
+        <button class="award-nav award-prev" type="button" aria-label="上一張獎狀">‹</button>
+        <figure><img src="assets/awards/aw1.jpg" alt="郭崇城榮譽獎狀一"></figure>
+        <button class="award-nav award-next" type="button" aria-label="下一張獎狀">›</button>
+      </div>
+      <div class="award-thumbnails" aria-label="六張榮譽獎狀縮圖">
+        <button type="button" data-award-index="0" aria-label="查看第一張榮譽獎狀" aria-current="true"><img src="assets/awards/aw1.jpg" alt=""></button>
+        <button type="button" data-award-index="1" aria-label="查看第二張榮譽獎狀"><img src="assets/awards/aw2.jpg" alt=""></button>
+        <button type="button" data-award-index="2" aria-label="查看第三張榮譽獎狀"><img src="assets/awards/aw3.jpg" alt=""></button>
+        <button type="button" data-award-index="3" aria-label="查看第四張榮譽獎狀"><img src="assets/awards/aw4.jpg" alt=""></button>
+        <button type="button" data-award-index="4" aria-label="查看第五張榮譽獎狀"><img src="assets/awards/aw5.jpg" alt=""></button>
+        <button type="button" data-award-index="5" aria-label="查看第六張榮譽獎狀"><img src="assets/awards/aw6.jpg" alt=""></button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js?v=14"></script>
+</body>
+</html>
