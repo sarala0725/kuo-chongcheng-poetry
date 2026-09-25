@@ -1,4 +1,9 @@
 (() => {
+  const editorialStyle = document.createElement('link');
+  editorialStyle.rel = 'stylesheet';
+  editorialStyle.href = 'editorial.css?v=20260925e';
+  editorialStyle.dataset.gsEditorial = '1';
+  document.head.append(editorialStyle);
   const paperTextureStyle = document.createElement("style");
   paperTextureStyle.id = "gs-paper-texture-style";
   paperTextureStyle.textContent = `
@@ -459,6 +464,7 @@
         slot.style.setProperty("overflow", "visible", "important");
         slot.style.setProperty("font-family", '"GS HanWang ShinSu", cursive', "important");
       });
+      hanziHero.style.setProperty("--gs-seal-delay", `${(inkTime + .34).toFixed(2)}s`);
       // Reveal all five glyphs atomically. Until this point the critical
       // stylesheet keeps HanziWriter's pale outlines and partial strokes hidden.
       hanziHero.classList.add("gs-hero-rendered");
@@ -1192,18 +1198,15 @@
         .gs-collection-entrance { min-height: 112px; padding: 20px 50px 18px 20px; }
         .gs-collection-preview { padding: 24px 0 27px; }
         .gs-collection-preview-list {
-          display: flex;
-          gap: 13px;
-          overflow-x: auto;
-          padding: 0 1px 10px;
-          scrollbar-width: none;
-          scroll-snap-type: x proximity;
-          -webkit-overflow-scrolling: touch;
+          display: grid;
+          grid-template-columns: minmax(0, 1fr);
+          gap: 16px;
+          overflow: visible;
+          padding: 0;
         }
-        .gs-collection-preview-list::-webkit-scrollbar { display: none; }
         .gs-collection-preview-list article {
-          flex: 0 0 min(82vw, 310px);
-          scroll-snap-align: start;
+          width: 100%;
+          min-width: 0;
         }
         .gs-library-filter-row {
           display: block;
@@ -1420,6 +1423,15 @@
   function mountLibraryBrowser() {
     ensureLibraryStyle();
     const poemSection = document.querySelector("#poems");
+    const sectionTitle = Array.from(poemSection?.querySelectorAll("h2") || [])
+      .find((item) => item.textContent.trim() === "\u4ed6\u7559\u4e0b\u7684\u5b57");
+    if (sectionTitle) sectionTitle.textContent = "\u9078\u4e00\u90e8\u8a69\u96c6\uff0c\u6162\u6162\u8b80";
+    Array.from(poemSection?.querySelectorAll("span, p") || []).forEach((item) => {
+      const label = item.textContent.trim();
+      if (label === "\u8a69\u6587\u5c55\u793a" || label.includes("\u8f15\u89f8\u8a69\u5361") || label.includes("\u9078\u64c7\u8a69\u96c6\uff0c\u5c55\u958b\u4f5c\u54c1\u76ee\u9304")) {
+        item.remove();
+      }
+    });
     const poemCards = Array.from(poemSection?.querySelectorAll("article") || [])
       .filter((card) => !card.closest(".gs-library-prose-grid") && !card.closest(".gs-collection-home"));
     const poemGrid = poemCards[0]?.parentElement;
@@ -1436,15 +1448,9 @@
       browser.className = "gs-library-browser";
       const home = document.createElement("div");
       home.className = "gs-collection-home";
-      const kicker = document.createElement("p");
-      kicker.className = "gs-library-kicker";
-      kicker.textContent = "\u8a69\u6587\u5178\u85cf";
-      const heading = document.createElement("h3");
-      heading.className = "gs-library-heading";
-      heading.textContent = "\u9078\u4e00\u90e8\u8a69\u96c6\uff0c\u6162\u6162\u8b80";
       const previews = document.createElement("div");
       previews.className = "gs-collection-previews";
-      home.append(kicker, heading, previews);
+      home.append(previews);
       const toolbar = document.createElement("div");
       toolbar.className = "gs-collection-toolbar";
       const back = document.createElement("button");
@@ -3164,11 +3170,11 @@
         .gs-pharmacy-portal-inner { width:min(1120px,88vw); padding:clamp(54px,9vw,110px) 0; }
         .gs-pharmacy-portal-kicker { display:block; margin-bottom:18px; color:#d8c69d; font-size:12px; letter-spacing:.3em; }
         .gs-pharmacy-portal h2 { max-width:620px; margin:0 0 18px; color:#f3ead5; font:400 clamp(38px,6vw,76px)/1.24 var(--font-poetic,"DFKai-SB",serif); letter-spacing:.08em; }
-        .gs-pharmacy-portal p { max-width:520px; margin:0 0 30px; color:rgba(242,233,211,.78); font-size:clamp(14px,1.5vw,18px); line-height:2; letter-spacing:.08em; }
+        .gs-pharmacy-portal p { max-width:880px; margin:0 0 30px; color:rgba(242,233,211,.86); font-size:clamp(34px,3.6vw,52px); line-height:1.6; letter-spacing:.055em; }
         .gs-pharmacy-portal-link { display:inline-flex; align-items:center; gap:16px; padding:13px 0; border-bottom:1px solid rgba(235,218,178,.65); color:#f3e7cb; text-decoration:none; font-size:14px; letter-spacing:.18em; transition:gap .3s,color .3s; }
         .gs-pharmacy-portal-link::after { content:"→"; font-size:22px; font-weight:300; }
         .gs-pharmacy-portal-link:hover,.gs-pharmacy-portal-link:focus-visible { gap:24px; color:#fff7e4; }
-        @media(max-width:680px){ .gs-pharmacy-portal{min-height:520px;place-items:end center}.gs-pharmacy-portal::before{background-size:auto 100%;background-position:54% center}.gs-pharmacy-portal-inner{padding:70px 0}.gs-pharmacy-portal h2{font-size:42px}.gs-pharmacy-portal p{font-size:14px} }
+        @media(max-width:680px){ .gs-pharmacy-portal{min-height:520px;place-items:end center}.gs-pharmacy-portal::before{background-size:auto 100%;background-position:54% center}.gs-pharmacy-portal-inner{padding:70px 0}.gs-pharmacy-portal p{font-size:32px;line-height:1.6} }
       `;
       document.head.append(style);
     }
@@ -3178,8 +3184,6 @@
     section.className = "gs-pharmacy-portal";
     section.innerHTML = `
       <div class="gs-pharmacy-portal-inner">
-        <span class="gs-pharmacy-portal-kicker">時光場景・宗泰藥房</span>
-        <h2>走進他寫詩的地方</h2>
         <p>一冊詩集、幾張獎狀與留在抽屜裡的回聲，都藏在昔日藥房的光影之中。</p>
         <a class="gs-pharmacy-portal-link" href="pharmacy/index.html?entry=interior" target="_top">進入宗泰藥房</a>
       </div>`;
@@ -3299,15 +3303,105 @@
     document.head.append(style);
   }
 
+  const editorialRevealBound = new WeakSet();
+  let editorialRevealObserver = null;
+
+  function setupEditorialScrollAnimations() {
+    if (!('IntersectionObserver' in window)) {
+      document.querySelectorAll('.gs-scroll-reveal').forEach((item) => item.classList.add('is-visible'));
+      return;
+    }
+    if (!editorialRevealObserver) {
+      editorialRevealObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          entry.target.classList.add('is-visible');
+          editorialRevealObserver.unobserve(entry.target);
+        });
+      }, { threshold: .12, rootMargin: '0px 0px -9% 0px' });
+    }
+
+    const groups = [
+      '#about .gs-author-media, #about .gs-author-layout > div:last-child > span, #about h2, #about .gs-author-layout > div:last-child > div',
+      '#poems .gs-library-kicker, #poems .gs-library-heading, #poems .gs-collection-preview, #poems article',
+      '.gs-pharmacy-portal .gs-pharmacy-portal-kicker, .gs-pharmacy-portal h2, .gs-pharmacy-portal p, .gs-pharmacy-portal-link',
+      '#echoes > *, footer > *',
+    ];
+    groups.forEach((selector) => {
+      document.querySelectorAll(selector).forEach((item, index) => {
+        if (editorialRevealBound.has(item)) return;
+        editorialRevealBound.add(item);
+        item.classList.add('gs-scroll-reveal');
+        item.style.setProperty('--gs-reveal-delay', `${Math.min(index % 4, 3) * 95}ms`);
+        editorialRevealObserver.observe(item);
+      });
+    });
+  }
+
   function enhanceMemoryExperience() {
     ensureMemoryExperienceStyle();
+    if (!document.querySelector('link[data-gs-editorial]')) {
+      const sheet = document.createElement('link');
+      sheet.rel = 'stylesheet';
+      sheet.href = 'editorial.css?v=20260925e';
+      sheet.dataset.gsEditorial = '1';
+      document.head.append(sheet);
+    }
+    const editorialHero = document.querySelector('#top');
+    editorialHero?.classList.add('gs-editorial-hero');
+    if (editorialHero && !editorialHero.querySelector('.gs-hero-intro')) {
+      const intro = document.createElement('aside');
+      intro.className = 'gs-hero-intro';
+      intro.setAttribute('aria-label', '詩集引言');
+      intro.innerHTML = `
+        <div class="gs-hero-intro-zh">
+          <p>他把一生種進了田裡，也種進了字裡</p>
+          <p>如今我們來，讀他留下的光</p>
+        </div>
+        <span class="gs-hero-intro-en">Kuo Chong Cheng Poetry</span>
+      `;
+      editorialHero.append(intro);
+    }
+    if (editorialHero && !editorialHero.querySelector('.gs-hero-scroll-cue')) {
+      const cue = document.createElement('a');
+      cue.className = 'gs-hero-scroll-cue';
+      cue.href = '#about';
+      cue.setAttribute('aria-label', '向下瀏覽作者介紹');
+      cue.innerHTML = '<span>Scroll Down</span><i></i>';
+      editorialHero.append(cue);
+    }
+    editorialHero?.querySelectorAll(':scope > a:not(.gs-hero-scroll-cue)').forEach((link) => link.classList.add('gs-legacy-hero-link'));
+    const heroTitle = document.querySelector('#hw-hero');
+    if (heroTitle && !heroTitle.querySelector('.gs-guo-seal')) {
+      const seal = document.createElement('img');
+      seal.className = 'gs-guo-seal';
+      seal.src = 'assets/guo-seal.png';
+      seal.alt = '郭';
+      heroTitle.append(seal);
+    }
+    document.querySelectorAll('#poems article').forEach((card) => {
+      const title = card.querySelector('h3')?.textContent.trim();
+      const source = illustrations.get(title);
+      if (!source || card.querySelector('.gs-poem-cover')) return;
+      const cover = document.createElement('img');
+      cover.className = 'gs-poem-cover';
+      cover.src = source;
+      cover.alt = '';
+      cover.loading = 'lazy';
+      cover.decoding = 'async';
+      card.prepend(cover);
+      card.classList.add('gs-illustrated-card');
+    });
     const hero = document.querySelector("#hw-hero");
     const heroStage = hero?.closest("section") || hero?.parentElement;
     heroStage?.classList.remove("gs-ink-hero-stage");
     heroStage?.querySelectorAll(".gs-plum-ink-flow").forEach((ink) => ink.remove());
 
     const about = document.querySelector("#about");
-    const photo = about?.querySelector('img[alt*="詩人"], img');
+    about?.querySelectorAll('span').forEach((label) => {
+      if (label.textContent.trim() === '關於詩人') label.remove();
+    });
+    const photo = about?.querySelector('img.gs-author-photo, img[alt*="詩人"], img');
     if (about && photo) {
       about.classList.add("gs-author-story");
       photo.src = "assets/author-back-view.jpg?v=20260809a";
@@ -3318,7 +3412,74 @@
       frame?.classList.add("gs-author-image-frame");
       media?.classList.add("gs-author-media");
       layout?.classList.add("gs-author-layout");
+      if (media && !media.querySelector('.gs-author-writing')) {
+        const writing = document.createElement('img');
+        writing.src = 'assets/author-writing.jpg';
+        writing.alt = '郭崇城在桌前專注寫作';
+        writing.className = 'gs-author-writing';
+        writing.loading = 'lazy';
+        media.append(writing);
+      }
     }
+
+    const mountDecoration = (host, className, source) => {
+      if (!host || host.querySelector(`.${className}`)) return;
+      const decoration = document.createElement('img');
+      decoration.className = `gs-plum-decor ${className}`;
+      decoration.src = source;
+      decoration.alt = '';
+      decoration.setAttribute('aria-hidden', 'true');
+      decoration.draggable = false;
+      host.append(decoration);
+    };
+    const poemsSection = document.querySelector('#poems');
+    mountDecoration(editorialHero, 'gs-plum-decor-hero-left', 'assets/plum-decoration-04.svg');
+    mountDecoration(editorialHero, 'gs-plum-decor-hero-corner', 'assets/plum-decoration-03.svg');
+    mountDecoration(about, 'gs-plum-decor-about-left', 'assets/plum-decoration-05.svg');
+    mountDecoration(poemsSection, 'gs-plum-decor-poems-right-top', 'assets/plum-decoration-04.svg');
+    mountDecoration(poemsSection, 'gs-plum-decor-poems-right-mid', 'assets/plum-decoration-05.svg');
+    mountDecoration(poemsSection, 'gs-plum-decor-poems-left-lower', 'assets/plum-decoration-03.svg');
+
+    if (!document.documentElement.dataset.gsPlumMotionBound) {
+      document.documentElement.dataset.gsPlumMotionBound = '1';
+      const awakenPlums = (section) => {
+        const branches = Array.from(section.querySelectorAll('.gs-plum-decor'));
+        branches.forEach((branch, index) => {
+          window.setTimeout(() => branch.classList.add('is-plum-awake'), index * 110);
+        });
+        branches.slice(0, 2).forEach((branch, branchIndex) => {
+          const branchRect = branch.getBoundingClientRect();
+          const sectionRect = section.getBoundingClientRect();
+          [0, 1, 2].forEach((petalIndex) => {
+            const petal = document.createElement('i');
+            petal.className = 'gs-falling-petal';
+            petal.setAttribute('aria-hidden', 'true');
+            petal.style.left = `${branchRect.left - sectionRect.left + branchRect.width * (.45 + petalIndex * .16)}px`;
+            petal.style.top = `${branchRect.top - sectionRect.top + branchRect.height * (.34 + petalIndex * .09)}px`;
+            petal.style.setProperty('--petal-delay', `${(branchIndex * .18 + petalIndex * .22).toFixed(2)}s`);
+            petal.style.setProperty('--petal-x', `${petalIndex % 2 ? -22 : 20 + petalIndex * 5}px`);
+            petal.style.setProperty('--petal-rot', `${130 + petalIndex * 72}deg`);
+            section.append(petal);
+            window.setTimeout(() => petal.remove(), 4200);
+          });
+        });
+      };
+      const plumSections = [editorialHero, about, poemsSection].filter(Boolean);
+      if ('IntersectionObserver' in window) {
+        const plumObserver = new IntersectionObserver((entries) => {
+          entries.forEach((entry) => {
+            if (!entry.isIntersecting) return;
+            awakenPlums(entry.target);
+            plumObserver.unobserve(entry.target);
+          });
+        }, { threshold: .18, rootMargin: '0px 0px -12% 0px' });
+        plumSections.forEach((section) => plumObserver.observe(section));
+      } else {
+        plumSections.forEach(awakenPlums);
+      }
+    }
+
+    setupEditorialScrollAnimations();
 
     document.querySelector("#plum-memory")?.remove();
     if (false && about && !document.querySelector("#plum-memory")) {

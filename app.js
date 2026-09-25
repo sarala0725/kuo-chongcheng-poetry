@@ -29,7 +29,7 @@ function prepareCollection() {
   } catch {
     // The collection still works if the browser blocks local storage.
   }
-  frame.src = "standalone.html?v=20260922f";
+  frame.src = "standalone.html?v=20260925e";
 }
 
 window.addEventListener("message", (event) => {
