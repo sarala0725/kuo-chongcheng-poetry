@@ -133,7 +133,7 @@ nav a[href="#pharmacy-memory"]:hover {
 #top #hw-hero .gs-hero-stroke-reveal { stroke: #fffdf5 !important; }
 #top #hw-hero .gs-hero-fill { fill: #fffdf5 !important; }
 .gs-guo-seal {
-  position: absolute; width: 23%; height: auto; right: 24%; top: 80%;
+  position: absolute; width: 19%; height: auto; right: 24%; top: 80%;
   opacity: 0; transform: scale(.82) rotate(-5deg);
   filter: drop-shadow(0 1px 1px rgba(70,18,12,.28));
   animation: gs-seal-arrive .54s cubic-bezier(.18,.8,.24,1) var(--gs-seal-delay, 4.8s) forwards;

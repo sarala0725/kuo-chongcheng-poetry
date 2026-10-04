@@ -1,10 +1,10 @@
 (() => {
   // Preload the compact vector seal before its stamp animation starts.
-  const GS_SEAL_SRC = 'assets/guo-chong-cheng-seal.svg?v=20261004u';
+  const GS_SEAL_SRC = 'assets/guo-chong-cheng-seal.svg?v=20261004seal2';
   new Image().src = GS_SEAL_SRC;
   const editorialStyle = document.createElement('link');
   editorialStyle.rel = 'stylesheet';
-  editorialStyle.href = 'editorial.css?v=20261004t';
+  editorialStyle.href = 'editorial.css?v=20261004seal2';
   editorialStyle.dataset.gsEditorial = '1';
   document.head.append(editorialStyle);
   const paperTextureStyle = document.createElement("style");
@@ -3494,7 +3494,7 @@
     if (!document.querySelector('link[data-gs-editorial]')) {
       const sheet = document.createElement('link');
       sheet.rel = 'stylesheet';
-      sheet.href = 'editorial.css?v=20261004t';
+      sheet.href = 'editorial.css?v=20261004seal2';
       sheet.dataset.gsEditorial = '1';
       document.head.append(sheet);
     }
