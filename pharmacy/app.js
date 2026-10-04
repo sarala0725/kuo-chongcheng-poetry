@@ -67,6 +67,8 @@ function showAward(index) {
     if (buttonIndex === activeAwardIndex) button.setAttribute('aria-current', 'true');
     else button.removeAttribute('aria-current');
   });
+  const activeThumbnail = awardLightbox.querySelector(`[data-award-index="${activeAwardIndex}"]`);
+  activeThumbnail?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
 }
 
 function openAward(index) {

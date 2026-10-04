@@ -352,11 +352,46 @@ button { color: inherit; }
 .award-stage img { display: block; width: auto; height: auto; max-width: 100%; max-height: 100%; object-fit: contain; filter: drop-shadow(0 18px 28px rgba(46,39,29,.17)); user-select: none; -webkit-user-drag: none; }
 .award-nav { border: 0; background: transparent; color: #796d5c; cursor: pointer; font: 300 48px/1 Georgia,serif; transition: color .25s, background .25s; }
 .award-nav:hover, .award-nav:focus-visible { color: #35483c; background: rgba(73,82,68,.06); }
-.award-thumbnails { display: grid; grid-template-columns: repeat(6,minmax(0,160px)); justify-content: center; gap: 8px; overflow-x: auto; padding: 12px 18px 18px; border-top: 1px solid rgba(66,58,46,.12); background: #deddd9; scrollbar-width: none; }
+.award-thumbnails {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 100vw;
+  box-sizing: border-box;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 12px 18px 18px;
+  border-top: 1px solid rgba(66,58,46,.12);
+  background: #deddd9;
+  scrollbar-width: none;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x;
+}
 .award-thumbnails::-webkit-scrollbar { display: none; }
-.award-thumbnails button { width: 100%; min-width: 120px; min-height: 120px; padding: 7px; border: 2px solid transparent; background: rgba(255,255,255,.38); cursor: pointer; transition: border-color .25s, background .25s; }
+.award-thumbnails button {
+  flex: 0 0 120px;
+  width: 120px;
+  min-width: 120px;
+  min-height: 120px;
+  padding: 7px;
+  border: 2px solid transparent;
+  background: rgba(255,255,255,.38);
+  cursor: pointer;
+  scroll-snap-align: center;
+  transition: border-color .25s, background .25s;
+}
 .award-thumbnails button[aria-current="true"] { border-color: #8b2131; background: rgba(255,255,255,.82); }
 .award-thumbnails img { display: block; width: 100%; height: 104px; object-fit: contain; }
+@media (min-width: 860px) {
+  .award-thumbnails:not(.manuscript-thumbnails) {
+    justify-content: center;
+  }
+}
 .award-thumbnails.manuscript-thumbnails {
   display:flex;
   grid-template-columns:none;
@@ -389,17 +424,40 @@ button { color: inherit; }
   .echo-form { grid-template-columns: 1fr; }
   .echo-form .echo-body,.echo-form button { grid-column: 1; }
   .echo-list { grid-template-columns: 1fr; }
-  .award-viewer { grid-template-rows: 54px minmax(0,1fr) 126px; }
+  .award-viewer { grid-template-rows: 54px minmax(0,1fr) 124px; }
   .award-viewer-bar p { padding-left: 16px; font-size: 12px; }
   .award-close { width: 58px; font-size: 30px; }
   .award-stage { grid-template-columns: 44px minmax(0,1fr) 44px; }
   .award-stage figure { padding: 15px 5px; }
   .award-nav { font-size: 38px; }
-  .award-thumbnails { grid-template-columns: repeat(4,104px); justify-content: start; padding: 9px 12px 13px; }
-  .award-thumbnails button { min-width: 104px; min-height: 100px; padding: 5px; }
-  .award-thumbnails img { height: 88px; }
-  .award-thumbnails.manuscript-thumbnails { display:flex; }
-  .award-thumbnails.manuscript-thumbnails button { flex-basis:104px; width:104px; }
+  .award-thumbnails {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    max-width: 100vw;
+    box-sizing: border-box;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 8px 12px calc(8px + env(safe-area-inset-bottom, 0px));
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x;
+  }
+  .award-thumbnails button {
+    flex: 0 0 104px;
+    width: 104px;
+    min-width: 104px;
+    min-height: 94px;
+    padding: 5px;
+    scroll-snap-align: center;
+  }
+  .award-thumbnails img { height: 82px; }
+  .award-thumbnails.manuscript-thumbnails { display: flex; }
+  .award-thumbnails.manuscript-thumbnails button { flex: 0 0 104px; width: 104px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
