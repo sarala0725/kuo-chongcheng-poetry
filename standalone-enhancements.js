@@ -1,7 +1,6 @@
 (() => {
-  // The hero seal is tiny on screen; preload the 40KB version (was an 885KB PNG)
-  // so it is already decoded when its stamp animation starts on mobile networks.
-  const GS_SEAL_SRC = 'assets/guo-seal-256.png?v=20261004a';
+  // Preload the compact vector seal before its stamp animation starts.
+  const GS_SEAL_SRC = 'assets/guo-chong-cheng-seal.svg?v=20261004u';
   new Image().src = GS_SEAL_SRC;
   const editorialStyle = document.createElement('link');
   editorialStyle.rel = 'stylesheet';
@@ -3235,7 +3234,7 @@
     const seal = document.createElement('img');
     seal.className = 'gs-guo-seal';
     seal.src = GS_SEAL_SRC;
-    seal.alt = '郭';
+    seal.alt = '郭崇城';
     seal.decoding = 'async';
     heroTitle.append(seal);
   }
