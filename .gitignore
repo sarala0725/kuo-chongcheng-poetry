@@ -12,3 +12,4 @@ public/images/daily/
 
 .vercel
 .env*
+preview-*.png

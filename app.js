@@ -40,7 +40,7 @@ function prepareCollection() {
   // Let the petals finish unfolding (SVG work) before the large collection bundle starts
   // unpacking; the half turn and falling petals run on the compositor and stay smooth.
   window.setTimeout(() => {
-    frame.src = "standalone.html?v=20261004e";
+    frame.src = "standalone.html?v=20261004r";
   }, 850);
 }
 

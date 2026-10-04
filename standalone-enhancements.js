@@ -1,7 +1,11 @@
 (() => {
+  // The hero seal is tiny on screen; preload the 40KB version (was an 885KB PNG)
+  // so it is already decoded when its stamp animation starts on mobile networks.
+  const GS_SEAL_SRC = 'assets/guo-seal-256.png?v=20261004a';
+  new Image().src = GS_SEAL_SRC;
   const editorialStyle = document.createElement('link');
   editorialStyle.rel = 'stylesheet';
-  editorialStyle.href = 'editorial.css?v=20261004c';
+  editorialStyle.href = 'editorial.css?v=20261004q';
   editorialStyle.dataset.gsEditorial = '1';
   document.head.append(editorialStyle);
   const paperTextureStyle = document.createElement("style");
@@ -465,6 +469,9 @@
         slot.style.setProperty("font-family", '"GS HanWang ShinSu", cursive', "important");
       });
       hanziHero.style.setProperty("--gs-seal-delay", `${(inkTime + .34).toFixed(2)}s`);
+      // Mobile visitors see the title in a small viewport; stamp the seal sooner.
+      hanziHero.style.setProperty("--gs-seal-delay-mobile", `${Math.min(inkTime + .34, 2.4).toFixed(2)}s`);
+      mountHeroSeal(hanziHero);
       // Reveal all five glyphs atomically. Until this point the critical
       // stylesheet keeps HanziWriter's pale outlines and partial strokes hidden.
       hanziHero.classList.add("gs-hero-rendered");
@@ -2168,6 +2175,7 @@
   function mountVisitorCounter() {
     const footer = document.querySelector("footer");
     if (!footer) return;
+    document.querySelector("footer > svg")?.remove();
     const existing = document.querySelector(".gs-visitor-counter");
     if (existing) {
       if (existing.parentElement !== footer) footer.append(existing);
@@ -3198,14 +3206,38 @@
         <a class="gs-pharmacy-portal-link" href="pharmacy/index.html?entry=interior" target="_top">進入宗泰藥房</a>
       </div>`;
     awards.before(section);
+  }
 
-    const awardLink = document.querySelector('header nav a[href="#awards"], nav a[href="#awards"]');
-    if (awardLink && !document.querySelector('a[href="#pharmacy-memory"]')) {
-      const link = awardLink.cloneNode(false);
-      link.href = "#pharmacy-memory";
-      link.textContent = "藥房";
-      awardLink.before(link);
-    }
+  const GS_PHARMACY_NAV_ICON = `<svg class="gs-pharmacy-nav-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><g fill="#fffdf8" stroke="#7e7250" stroke-width="0.75"><ellipse cx="12" cy="6.2" rx="3.2" ry="4.8"/><ellipse cx="12" cy="6.2" rx="3.2" ry="4.8" transform="rotate(72 12 12)"/><ellipse cx="12" cy="6.2" rx="3.2" ry="4.8" transform="rotate(144 12 12)"/><ellipse cx="12" cy="6.2" rx="3.2" ry="4.8" transform="rotate(216 12 12)"/><ellipse cx="12" cy="6.2" rx="3.2" ry="4.8" transform="rotate(288 12 12)"/></g><circle cx="12" cy="12" r="2.2" fill="#c49a55"/><circle cx="12" cy="12" r="1.1" fill="#fdfcf8"/></svg>`;
+
+  // 導覽列的「文選」改為「宗泰藥房」，點選後滑動到藥房區塊。
+  function ensurePharmacyNav() {
+    document.querySelectorAll('header a, nav a').forEach((link) => {
+      const href = link.getAttribute("href");
+      const label = link.textContent.trim();
+      if (link.dataset.gsPharmacyNav === "1" || href === "#essays" || label === "文選" || (href === "#pharmacy-memory" && label.includes("宗泰藥房"))) {
+        if (href === "#pharmacy-memory" && label === "藥房") {
+          link.remove();
+          return;
+        }
+        link.setAttribute("href", "#pharmacy-memory");
+        link.dataset.gsPharmacyNav = "1";
+        if (!link.querySelector('.gs-pharmacy-nav-icon') || link.firstElementChild?.tagName?.toLowerCase() !== 'svg') {
+          link.innerHTML = `${GS_PHARMACY_NAV_ICON}<span>宗泰藥房</span>`;
+        }
+        return;
+      }
+    });
+  }
+
+  function mountHeroSeal(heroTitle) {
+    if (!heroTitle || heroTitle.querySelector('.gs-guo-seal')) return;
+    const seal = document.createElement('img');
+    seal.className = 'gs-guo-seal';
+    seal.src = GS_SEAL_SRC;
+    seal.alt = '郭';
+    seal.decoding = 'async';
+    heroTitle.append(seal);
   }
 
   function ensureMemoryExperienceStyle() {
@@ -3397,10 +3429,9 @@
         });
       }, { threshold: .15, rootMargin: '0px 0px -14% 0px' });
     }
-    const poemSections = Array.from(document.querySelectorAll('#poems .gs-collection-preview'));
+    // 詩集區塊不再觸發梅花飄落。
     const sections = [
       document.querySelector('#about'),
-      ...(poemSections.length ? poemSections : [document.querySelector('#poems')]),
       document.querySelector('#echoes'),
     ];
     sections.filter(Boolean).forEach((section) => {
@@ -3464,7 +3495,7 @@
     if (!document.querySelector('link[data-gs-editorial]')) {
       const sheet = document.createElement('link');
       sheet.rel = 'stylesheet';
-      sheet.href = 'editorial.css?v=20261004c';
+      sheet.href = 'editorial.css?v=20261004q';
       sheet.dataset.gsEditorial = '1';
       document.head.append(sheet);
     }
@@ -3488,7 +3519,7 @@
       cue.className = 'gs-hero-scroll-cue';
       cue.href = '#about';
       cue.setAttribute('aria-label', '向下瀏覽作者介紹');
-      cue.innerHTML = '<span>Scroll Down</span><i></i>';
+      cue.innerHTML = '<span class="gs-cue-text"><span class="gs-cue-scroll">Scroll</span> <span class="gs-cue-down">Down</span></span><i></i>';
       editorialHero.append(cue);
     }
     const scrollCue = editorialHero?.querySelector('.gs-hero-scroll-cue');
@@ -3504,14 +3535,7 @@
       editorialHero.append(petals);
     }
     editorialHero?.querySelectorAll(':scope > a:not(.gs-hero-scroll-cue)').forEach((link) => link.classList.add('gs-legacy-hero-link'));
-    const heroTitle = document.querySelector('#hw-hero');
-    if (heroTitle && !heroTitle.querySelector('.gs-guo-seal')) {
-      const seal = document.createElement('img');
-      seal.className = 'gs-guo-seal';
-      seal.src = 'assets/guo-seal.png';
-      seal.alt = '郭';
-      heroTitle.append(seal);
-    }
+    mountHeroSeal(document.querySelector('#hw-hero'));
     document.querySelectorAll('#poems article').forEach((card) => {
       const title = card.querySelector('h3')?.textContent.trim();
       const source = illustrations.get(title);
@@ -3876,6 +3900,17 @@ function removeLegacyHonors() {
         return;
       }
     }
+    const pharmacyNav = event.target.closest?.('a[href="#pharmacy-memory"]');
+    if (pharmacyNav) {
+      const pharmacySection = document.querySelector("#pharmacy-memory");
+      if (pharmacySection) {
+        event.preventDefault();
+        if (document.querySelector(".gs-inline-reader-root")) closeInlineReader();
+        history.replaceState(null, "", "#pharmacy-memory");
+        pharmacySection.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+      return;
+    }
     const essayNav = event.target.closest?.('a[href="#essays"]');
     if (essayNav) {
       event.preventDefault();
@@ -3940,6 +3975,7 @@ function removeLegacyHonors() {
   document.querySelector("#manuscripts")?.remove();
   document.querySelectorAll('a[href="#manuscripts"]').forEach((link) => link.remove());
   window.setInterval(mountPharmacyPortal, 500);
+  window.setInterval(ensurePharmacyNav, 400);
   window.setInterval(removeLegacyManuscripts, 350);
   window.setInterval(removeLegacyHonors, 350);
   window.addEventListener("scroll", syncPharmacyNav, { passive: true });
