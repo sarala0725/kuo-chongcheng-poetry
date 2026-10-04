@@ -15,7 +15,7 @@
       </g>
     </mask>
   </defs>
-  <path d="M13 9 Q7 11 9 17 L8 92 Q8 102 17 103 L94 104 Q103 102 103 94 L104 17 Q102 8 94 9 Z" fill="#c51e16" filter="url(#worn)" mask="url(#ink)"/>
+  <path d="M13 9 Q7 11 9 17 L8 92 Q8 102 17 103 L94 104 Q103 102 103 94 L104 17 Q102 8 94 9 Z" fill="#9f3f32" filter="url(#worn)" mask="url(#ink)"/>
   <g fill="#fff9ee" font-family="DFKai-SB, KaiTi, 'Noto Serif CJK TC', serif" font-weight="700" text-anchor="middle" dominant-baseline="central">
     <text x="78" y="55" font-size="44">郭</text>
     <text x="34" y="34" font-size="39">崇</text>

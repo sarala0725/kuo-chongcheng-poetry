@@ -1,6 +1,6 @@
 (() => {
   // Preload the compact vector seal before its stamp animation starts.
-  const GS_SEAL_SRC = 'assets/guo-chong-cheng-seal.svg?v=20261004seal5';
+  const GS_SEAL_SRC = 'assets/guo-chong-cheng-seal.svg?v=20261004seal6';
   new Image().src = GS_SEAL_SRC;
   const editorialStyle = document.createElement('link');
   editorialStyle.rel = 'stylesheet';
