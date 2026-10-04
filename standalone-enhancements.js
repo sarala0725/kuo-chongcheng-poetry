@@ -4,7 +4,7 @@
   new Image().src = GS_SEAL_SRC;
   const editorialStyle = document.createElement('link');
   editorialStyle.rel = 'stylesheet';
-  editorialStyle.href = 'editorial.css?v=20261004seal2';
+  editorialStyle.href = 'editorial.css?v=20261004seal3';
   editorialStyle.dataset.gsEditorial = '1';
   document.head.append(editorialStyle);
   const paperTextureStyle = document.createElement("style");
@@ -3494,7 +3494,7 @@
     if (!document.querySelector('link[data-gs-editorial]')) {
       const sheet = document.createElement('link');
       sheet.rel = 'stylesheet';
-      sheet.href = 'editorial.css?v=20261004seal2';
+      sheet.href = 'editorial.css?v=20261004seal3';
       sheet.dataset.gsEditorial = '1';
       document.head.append(sheet);
     }
