@@ -5,7 +5,7 @@
   new Image().src = GS_SEAL_SRC;
   const editorialStyle = document.createElement('link');
   editorialStyle.rel = 'stylesheet';
-  editorialStyle.href = 'editorial.css?v=20261004q';
+  editorialStyle.href = 'editorial.css?v=20261004s';
   editorialStyle.dataset.gsEditorial = '1';
   document.head.append(editorialStyle);
   const paperTextureStyle = document.createElement("style");
@@ -3495,7 +3495,7 @@
     if (!document.querySelector('link[data-gs-editorial]')) {
       const sheet = document.createElement('link');
       sheet.rel = 'stylesheet';
-      sheet.href = 'editorial.css?v=20261004q';
+      sheet.href = 'editorial.css?v=20261004s';
       sheet.dataset.gsEditorial = '1';
       document.head.append(sheet);
     }
@@ -3507,8 +3507,8 @@
       intro.setAttribute('aria-label', '詩集引言');
       intro.innerHTML = `
         <div class="gs-hero-intro-zh">
-          <p>他把一生種進了田裡，也種進了字裡</p>
-          <p>如今我們來，讀他留下的光</p>
+          <p>他把一生種進了田裡，<br class="gs-hero-break">也種進了字裡</p>
+          <p>如今我們來，<br class="gs-hero-break">讀他留下的光</p>
         </div>
         <span class="gs-hero-intro-en">Kuo Chong Cheng Poetry</span>
       `;
