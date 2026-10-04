@@ -74,6 +74,62 @@ function openAward(index) {
   setDialog(awardLightbox, true);
 }
 
+function bindHorizontalSwipe(stage, showPrevious, showNext) {
+  let startX = 0;
+  let startY = 0;
+  let tracking = false;
+  let pointerId = null;
+
+  const finishGesture = (endX, endY) => {
+    const distanceX = endX - startX;
+    const distanceY = endY - startY;
+    if (Math.abs(distanceX) < 44 || Math.abs(distanceX) <= Math.abs(distanceY) * 1.15) return;
+    if (distanceX < 0) showNext();
+    else showPrevious();
+  };
+
+  stage.addEventListener('touchstart', (event) => {
+    if (event.touches.length !== 1) return;
+    const touch = event.touches[0];
+    startX = touch.clientX;
+    startY = touch.clientY;
+    tracking = true;
+  }, { passive: true });
+
+  stage.addEventListener('touchend', (event) => {
+    if (!tracking || event.changedTouches.length !== 1) return;
+    tracking = false;
+    const touch = event.changedTouches[0];
+    finishGesture(touch.clientX, touch.clientY);
+  }, { passive: true });
+
+  stage.addEventListener('touchcancel', () => {
+    tracking = false;
+  }, { passive: true });
+
+  stage.addEventListener('pointerdown', (event) => {
+    if (event.pointerType === 'touch') return;
+    if (event.pointerType === 'mouse' && event.button !== 0) return;
+    startX = event.clientX;
+    startY = event.clientY;
+    pointerId = event.pointerId;
+    stage.setPointerCapture?.(event.pointerId);
+  });
+
+  stage.addEventListener('pointerup', (event) => {
+    if (event.pointerId !== pointerId) return;
+    pointerId = null;
+    finishGesture(event.clientX, event.clientY);
+    stage.releasePointerCapture?.(event.pointerId);
+  });
+
+  stage.addEventListener('pointercancel', () => {
+    pointerId = null;
+  });
+
+  stage.addEventListener('dragstart', (event) => event.preventDefault());
+}
+
 function showManuscript(index) {
   activeManuscriptIndex = (index + manuscriptItems.length) % manuscriptItems.length;
   const item = manuscriptItems[activeManuscriptIndex];
@@ -160,6 +216,11 @@ document.querySelectorAll('.award-frame').forEach((button, index) => {
 });
 awardLightbox.querySelector('.award-prev').addEventListener('click', () => showAward(activeAwardIndex - 1));
 awardLightbox.querySelector('.award-next').addEventListener('click', () => showAward(activeAwardIndex + 1));
+bindHorizontalSwipe(
+  awardLightbox.querySelector('.award-stage'),
+  () => showAward(activeAwardIndex - 1),
+  () => showAward(activeAwardIndex + 1)
+);
 awardLightbox.querySelectorAll('[data-award-index]').forEach((button) => {
   button.addEventListener('click', () => showAward(Number(button.dataset.awardIndex)));
 });

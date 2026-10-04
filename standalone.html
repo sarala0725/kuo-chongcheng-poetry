@@ -17,7 +17,7 @@
       This page requires JavaScript to display.
     </div>
   </noscript>
-  <script src="standalone-manifest.js?v=20260921a"></script>
+  <script src="standalone-asset-map.js?v=20261004a"></script>
 </head>
 <body>
   <div id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" sc-camel-view-box="0 0 200 200"><rect width="200" height="200" fill="#EBE3D2"></rect><g transform="translate(100,100)"><path d="M-40 60 C-20 30 -10 10 0 -20 C10 -50 30 -65 55 -75" fill="none" stroke="#4A463E" stroke-width="4"></path><g fill="#FCFAF3" stroke="#6E6457" stroke-width="2"><ellipse cx="55" cy="-85" rx="10" ry="15"></ellipse><ellipse cx="70" cy="-75" rx="10" ry="15"></ellipse><ellipse cx="66" cy="-95" rx="10" ry="15"></ellipse></g></g></svg></div>
@@ -66,7 +66,20 @@ document.addEventListener('DOMContentLoaded', async function() {
       return;
     }
 
-    const manifest = window.__GS_BUNDLER_MANIFEST__ || JSON.parse(manifestEl.textContent);
+    // file:// pages cannot fetch local Babel sources. Keep the original packed
+    // resources there; HTTP deployments use the small, lazy asset URL map.
+    if (location.protocol === 'file:') {
+      await new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = 'standalone-manifest.js?v=20260921a';
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.append(script);
+      });
+    }
+    const manifest = (location.protocol === 'file:'
+      ? window.__GS_BUNDLER_MANIFEST__
+      : window.__GS_BUNDLER_ASSETS__) || JSON.parse(manifestEl.textContent);
     let template = JSON.parse(templateEl.textContent);
     // The custom SVG renderer owns the hero. Disable the original writer
     // before React mounts: its delayed init/fallback can otherwise append
@@ -76,12 +89,18 @@ document.addEventListener('DOMContentLoaded', async function() {
     template = template.replace('writeSequence() {', 'writeSequence() { return;');
 
     const uuids = Object.keys(manifest);
-    setStatus('Unpacking ' + uuids.length + ' assets...');
+    setStatus('Preparing the collection...');
 
     const blobUrls = {};
     const resourceBlobs = {};
     await Promise.all(uuids.map(async (uuid) => {
       const entry = manifest[uuid];
+      // Extracted assets are ordinary URLs: the browser fetches only resources
+      // needed by the current view, instead of decoding the entire old bundle.
+      if (entry.url) {
+        blobUrls[uuid] = entry.url;
+        return;
+      }
       try {
         const binaryStr = atob(entry.data);
         const bytes = new Uint8Array(binaryStr.length);
@@ -207,7 +226,7 @@ document.addEventListener('DOMContentLoaded', async function() {
   </script>
 
   <script src="hero-calligraphy-paths.js"></script>
-  <script src="standalone-enhancements.js?v=20260925e"></script>
+  <script src="standalone-enhancements.js?v=20261004c"></script>
   <script type="__bundler/manifest">
 {}
   </script>

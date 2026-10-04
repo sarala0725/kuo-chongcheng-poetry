@@ -6,7 +6,15 @@ const loaderStartedAt = Date.now();
 const introStorageKey = "gs_intro_seen_2026_09";
 let hasSeenIntro = false;
 let loaderDismissed = false;
+let loaderFinishing = false;
 let lastGoTopActivation = 0;
+
+function finishLoader() {
+  if (loaderFinishing || loaderDismissed) return;
+  loaderFinishing = true;
+  loader.classList.add("is-finishing");
+  window.setTimeout(dismissLoader, 450);
+}
 
 function dismissLoader() {
   if (loaderDismissed) return;
@@ -29,14 +37,18 @@ function prepareCollection() {
   } catch {
     // The collection still works if the browser blocks local storage.
   }
-  frame.src = "standalone.html?v=20260925e";
+  // Let the petals finish unfolding (SVG work) before the large collection bundle starts
+  // unpacking; the half turn and falling petals run on the compositor and stay smooth.
+  window.setTimeout(() => {
+    frame.src = "standalone.html?v=20261004e";
+  }, 850);
 }
 
 window.addEventListener("message", (event) => {
   if (event.source === frame.contentWindow && event.data?.type === "gs-ready") {
-    const minimumIntro = hasSeenIntro ? 250 : 1400;
+    const minimumIntro = hasSeenIntro ? 1600 : 1650;
     const remaining = Math.max(0, minimumIntro - (Date.now() - loaderStartedAt));
-    window.setTimeout(dismissLoader, remaining);
+    window.setTimeout(finishLoader, remaining);
   }
 });
 

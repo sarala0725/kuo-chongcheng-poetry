@@ -347,9 +347,9 @@ button { color: inherit; }
 .award-viewer-bar p { margin: 0; padding-left: 24px; font-size: 14px; letter-spacing: .12em; }
 .award-close { align-self: stretch; width: 72px; border: 0; border-left: 1px solid rgba(66,58,46,.12); background: #585954; color: #fff; cursor: pointer; font: 300 34px/1 sans-serif; transition: background .25s; }
 .award-close:hover, .award-close:focus-visible { background: #35483c; }
-.award-stage { position: relative; display: grid; grid-template-columns: 72px minmax(0,1fr) 72px; min-height: 0; align-items: stretch; overflow: hidden; }
+.award-stage { position: relative; display: grid; grid-template-columns: 72px minmax(0,1fr) 72px; min-height: 0; align-items: stretch; overflow: hidden; touch-action: pan-y; overscroll-behavior-x: contain; }
 .award-stage figure { display: grid; place-items: center; box-sizing: border-box; min-width: 0; min-height: 0; margin: 0; padding: clamp(20px,3.5vw,52px); overflow: hidden; }
-.award-stage img { display: block; width: auto; height: auto; max-width: 100%; max-height: 100%; object-fit: contain; filter: drop-shadow(0 18px 28px rgba(46,39,29,.17)); }
+.award-stage img { display: block; width: auto; height: auto; max-width: 100%; max-height: 100%; object-fit: contain; filter: drop-shadow(0 18px 28px rgba(46,39,29,.17)); user-select: none; -webkit-user-drag: none; }
 .award-nav { border: 0; background: transparent; color: #796d5c; cursor: pointer; font: 300 48px/1 Georgia,serif; transition: color .25s, background .25s; }
 .award-nav:hover, .award-nav:focus-visible { color: #35483c; background: rgba(73,82,68,.06); }
 .award-thumbnails { display: grid; grid-template-columns: repeat(6,minmax(0,160px)); justify-content: center; gap: 8px; overflow-x: auto; padding: 12px 18px 18px; border-top: 1px solid rgba(66,58,46,.12); background: #deddd9; scrollbar-width: none; }

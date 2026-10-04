@@ -1,7 +1,7 @@
 (() => {
   const editorialStyle = document.createElement('link');
   editorialStyle.rel = 'stylesheet';
-  editorialStyle.href = 'editorial.css?v=20260925e';
+  editorialStyle.href = 'editorial.css?v=20261004c';
   editorialStyle.dataset.gsEditorial = '1';
   document.head.append(editorialStyle);
   const paperTextureStyle = document.createElement("style");
@@ -617,10 +617,10 @@
       .gs-collection-note { margin-top: 3px; color: #9a9184; }
       .gs-collection-preview {
         padding: 27px 0 31px;
-        border-top: 1px solid rgba(69, 80, 65, .16);
+        border-top: 0;
       }
       .gs-collection-preview:last-child {
-        border-bottom: 1px solid rgba(69, 80, 65, .16);
+        border-bottom: 0;
       }
       .gs-collection-preview-head {
         display: flex;
@@ -1081,6 +1081,8 @@
         transform: none;
       }
       .gs-visitor-counter {
+        position: static !important;
+        transform: none !important;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -1091,6 +1093,7 @@
         border-top: 1px solid rgba(82, 74, 62, .18);
         color: #756b5d;
         text-align: center;
+        flex-wrap: wrap;
       }
       .gs-visitor-label {
         color: #5c554c;
@@ -1283,7 +1286,23 @@
   }
 
   function getCardCollection(card) {
-    return card?.querySelector("span")?.textContent.trim() || "";
+    return card?.dataset.gsCollection || card?.querySelector("span")?.textContent.trim() || "";
+  }
+
+  function showWorkFormOnCard(card) {
+    const tag = card.querySelector("span");
+    const meta = tag?.parentElement?.querySelectorAll(":scope > span")[1];
+    if (!tag || !meta) return;
+    const raw = meta.textContent.trim();
+    const [originalForm, ...dateParts] = raw.split("·").map((part) => part.trim());
+    if (!originalForm) return;
+    const form = originalForm === "紀遊六首" ? "組詩" : originalForm;
+    tag.dataset.gsForm = form;
+    tag.setAttribute("aria-label", form);
+    tag.classList.add("gs-work-form-tag");
+    meta.dataset.gsDate = dateParts.join(" · ");
+    meta.setAttribute("aria-label", meta.dataset.gsDate);
+    meta.classList.add("gs-work-date");
   }
 
   function buildFilterRow(label, values, kind) {
@@ -1440,6 +1459,7 @@
     poemCards.forEach((card) => {
       card.dataset.gsWorkType = "\u8a69\u8a5e";
       card.dataset.gsCollection = getCardCollection(card);
+      showWorkFormOnCard(card);
     });
 
     let browser = poemSection.querySelector(".gs-library-browser");
@@ -1490,6 +1510,7 @@
         const clone = sourceCard.cloneNode(true);
         clone.dataset.gsWorkType = "\u6563\u6587";
         clone.dataset.gsCollection = getCardCollection(sourceCard);
+        showWorkFormOnCard(clone);
         clone.addEventListener("click", (event) => {
           event.preventDefault();
           pendingReaderTitle = clone.querySelector("h3")?.textContent.trim() || "";
@@ -1508,6 +1529,8 @@
       proseGrid.after(empty);
     }
     refreshCollectionPreviews(browser);
+    browser.querySelectorAll(".gs-collection-preview article").forEach(showWorkFormOnCard);
+    proseGrid.querySelectorAll("article").forEach(showWorkFormOnCard);
     applyLibraryFilters();
   }
 
@@ -2101,7 +2124,7 @@
   async function loadVisitorCount(valueElement) {
     if (valueElement.dataset.gsCountLoaded === "1") return;
     valueElement.dataset.gsCountLoaded = "1";
-    if (location.protocol === "file:") {
+    if (location.protocol === "file:" || ["localhost", "127.0.0.1"].includes(location.hostname)) {
       valueElement.textContent = "\u672c\u6a5f\u9810\u89bd";
       valueElement.classList.add("is-preview");
       valueElement.closest(".gs-visitor-counter")?.setAttribute(
@@ -2118,48 +2141,36 @@
     } catch (_) {
       shouldIncrement = location.hostname === productionHost;
     }
-    const action = shouldIncrement ? "up" : "";
-    const endpoint = `https://api.counterapi.dev/v1/kuo-chongcheng-poetry/visitors/${action}`;
-    const fallbackCount = 10;
-    valueElement.textContent = new Intl.NumberFormat("zh-TW", {
-      minimumIntegerDigits: 6,
-      useGrouping: false,
-    }).format(fallbackCount);
+    const endpoint = `/api/visitor-count${shouldIncrement ? "?action=up" : ""}`;
+    valueElement.textContent = "讀取中";
     try {
       const response = await fetch(endpoint, { cache: "no-store" });
       if (!response.ok) throw new Error("visitor counter unavailable");
       const data = await response.json();
-      const count = Number(data.count ?? data.value ?? data);
-      if (!Number.isFinite(count)) throw new Error("visitor count missing");
+      const count = Number(data.count);
+      if (!Number.isSafeInteger(count) || count < 0) throw new Error("visitor count missing");
       valueElement.textContent = new Intl.NumberFormat("zh-TW", {
         minimumIntegerDigits: 6,
         useGrouping: false,
       }).format(count);
-      try {
-        localStorage.setItem("gs_last_visit_count", String(count));
-      } catch (_) {}
       if (shouldIncrement) {
         try {
           sessionStorage.setItem(sessionKey, "1");
         } catch (_) {}
       }
     } catch (_) {
-      let savedCount = 0;
-      try {
-        savedCount = Number(localStorage.getItem("gs_last_visit_count"));
-      } catch (_) {}
-      valueElement.textContent = Number.isFinite(savedCount) && savedCount > 0
-        ? new Intl.NumberFormat("zh-TW", { minimumIntegerDigits: 6, useGrouping: false }).format(savedCount)
-        : new Intl.NumberFormat("zh-TW", { minimumIntegerDigits: 6, useGrouping: false }).format(fallbackCount);
+      valueElement.textContent = "暫無統計";
+      valueElement.classList.add("is-preview");
       valueElement.closest(".gs-visitor-counter")?.setAttribute("title", "\u700f\u89bd\u4eba\u6578\u66ab\u6642\u7121\u6cd5\u53d6\u5f97");
     }
   }
 
   function mountVisitorCounter() {
     const footer = document.querySelector("footer");
+    if (!footer) return;
     const existing = document.querySelector(".gs-visitor-counter");
     if (existing) {
-      if (footer && existing.parentElement !== footer) footer.append(existing);
+      if (existing.parentElement !== footer) footer.append(existing);
       return;
     }
     const counter = document.createElement("aside");
@@ -2167,10 +2178,9 @@
     counter.setAttribute("aria-label", "\u7db2\u7ad9\u700f\u89bd\u4eba\u6578");
     counter.innerHTML = `
       <span class="gs-visitor-label">\u5171\u8b80\u8a69\u6587\u4eba\u6b21</span>
-      <span class="gs-visitor-value" aria-live="polite">000010</span>
+      <span class="gs-visitor-value" aria-live="polite">讀取中</span>
     `;
-    if (footer) footer.append(counter);
-    else document.body.append(counter);
+    footer.append(counter);
     loadVisitorCount(counter.querySelector(".gs-visitor-value"));
   }
 
@@ -3184,7 +3194,7 @@
     section.className = "gs-pharmacy-portal";
     section.innerHTML = `
       <div class="gs-pharmacy-portal-inner">
-        <p>一冊詩集、幾張獎狀與留在抽屜裡的回聲，都藏在昔日藥房的光影之中。</p>
+        <p>一冊詩集、幾張獎狀，都藏在昔日藥房的光影之中。</p>
         <a class="gs-pharmacy-portal-link" href="pharmacy/index.html?entry=interior" target="_top">進入宗泰藥房</a>
       </div>`;
     awards.before(section);
@@ -3305,6 +3315,109 @@
 
   const editorialRevealBound = new WeakSet();
   let editorialRevealObserver = null;
+  const plumPetalObserved = new WeakSet();
+  let plumPetalObserver = null;
+  let pharmacyPetalObserver = null;
+  let heroCueScroll = null;
+
+  function stopHeroCueScroll() {
+    if (!heroCueScroll) return;
+    cancelAnimationFrame(heroCueScroll.frame);
+    heroCueScroll.root.style.scrollBehavior = heroCueScroll.previousBehavior;
+    window.removeEventListener('wheel', stopHeroCueScroll);
+    window.removeEventListener('touchstart', stopHeroCueScroll);
+    window.removeEventListener('keydown', stopHeroCueScroll);
+    heroCueScroll = null;
+  }
+
+  function scrollHeroCueToAbout(event) {
+    const about = document.querySelector('#about');
+    if (!about) return;
+    event.preventDefault();
+    stopHeroCueScroll();
+    const root = document.body.scrollHeight > document.body.clientHeight + 2
+      ? document.body
+      : document.scrollingElement || document.documentElement;
+    const from = root.scrollTop;
+    const margin = parseFloat(getComputedStyle(about).scrollMarginTop) || 0;
+    const to = Math.max(0, from + about.getBoundingClientRect().top - margin);
+    history.replaceState(null, '', '#about');
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      root.scrollTop = to;
+      return;
+    }
+    heroCueScroll = { frame: 0, root, previousBehavior: root.style.scrollBehavior };
+    root.style.scrollBehavior = 'auto';
+    window.addEventListener('wheel', stopHeroCueScroll, { passive: true });
+    window.addEventListener('touchstart', stopHeroCueScroll, { passive: true });
+    window.addEventListener('keydown', stopHeroCueScroll);
+    let startedAt = null;
+    const step = (time) => {
+      if (!heroCueScroll) return;
+      if (startedAt === null) startedAt = time;
+      const progress = Math.min(1, (time - startedAt) / 1950);
+      const eased = progress < .5 ? 4 * progress ** 3 : 1 - (-2 * progress + 2) ** 3 / 2;
+      root.scrollTop = from + (to - from) * eased;
+      if (progress < 1) heroCueScroll.frame = requestAnimationFrame(step);
+      else stopHeroCueScroll();
+    };
+    heroCueScroll.frame = requestAnimationFrame(step);
+  }
+
+  function releaseSectionPetals(section) {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const pharmacy = document.querySelector('.gs-pharmacy-portal');
+    const pharmacyRect = pharmacy?.getBoundingClientRect();
+    if (pharmacyRect && pharmacyRect.top < window.innerHeight && pharmacyRect.bottom > 0) return;
+    const rect = section.getBoundingClientRect();
+    const originY = Math.max(70, Math.min(window.innerHeight * .42, rect.top + Math.min(rect.height * .2, 150)));
+    for (let index = 0; index < 4; index += 1) {
+      const petal = document.createElement('i');
+      petal.className = 'gs-falling-petal gs-section-petal';
+      petal.setAttribute('aria-hidden', 'true');
+      const onRight = index % 2 === 1;
+      petal.style.left = onRight ? `calc(100vw - ${24 + index * 6}px)` : `${12 + index * 7}px`;
+      petal.style.top = `${originY + index * 9}px`;
+      petal.style.setProperty('--petal-delay', `${index * .14}s`);
+      petal.style.setProperty('--petal-x', `${onRight ? -18 - index * 4 : 16 + index * 4}px`);
+      petal.style.setProperty('--petal-rot', `${onRight ? -135 - index * 24 : 125 + index * 22}deg`);
+      document.body.append(petal);
+      window.setTimeout(() => petal.remove(), 3900);
+    }
+  }
+
+  function setupSectionPetals() {
+    if (!('IntersectionObserver' in window)) return;
+    if (!plumPetalObserver) {
+      plumPetalObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          releaseSectionPetals(entry.target);
+          plumPetalObserver.unobserve(entry.target);
+        });
+      }, { threshold: .15, rootMargin: '0px 0px -14% 0px' });
+    }
+    const poemSections = Array.from(document.querySelectorAll('#poems .gs-collection-preview'));
+    const sections = [
+      document.querySelector('#about'),
+      ...(poemSections.length ? poemSections : [document.querySelector('#poems')]),
+      document.querySelector('#echoes'),
+    ];
+    sections.filter(Boolean).forEach((section) => {
+      if (plumPetalObserved.has(section)) return;
+      plumPetalObserved.add(section);
+      plumPetalObserver.observe(section);
+    });
+    const pharmacy = document.querySelector('.gs-pharmacy-portal');
+    if (pharmacy && !pharmacyPetalObserver) {
+      pharmacyPetalObserver = new IntersectionObserver((entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          document.querySelectorAll('.gs-section-petal').forEach((petal) => petal.remove());
+        }
+      }, { threshold: 0 });
+      pharmacyPetalObserver.observe(pharmacy);
+    }
+  }
 
   function setupEditorialScrollAnimations() {
     if (!('IntersectionObserver' in window)) {
@@ -3322,10 +3435,10 @@
     }
 
     const groups = [
-      '#about .gs-author-media, #about .gs-author-layout > div:last-child > span, #about h2, #about .gs-author-layout > div:last-child > div',
+      '#about .gs-author-layout > div:last-child > span, #about h2, #about .gs-author-layout > div:last-child > div',
       '#poems .gs-library-kicker, #poems .gs-library-heading, #poems .gs-collection-preview, #poems article',
       '.gs-pharmacy-portal .gs-pharmacy-portal-kicker, .gs-pharmacy-portal h2, .gs-pharmacy-portal p, .gs-pharmacy-portal-link',
-      '#echoes > *, footer > *',
+      '#echoes > *, footer > :not(.gs-visitor-counter)',
     ];
     groups.forEach((selector) => {
       document.querySelectorAll(selector).forEach((item, index) => {
@@ -3336,6 +3449,14 @@
         editorialRevealObserver.observe(item);
       });
     });
+    ['#about .gs-author-writing', '#about .gs-author-image-frame', '#about .gs-author-media > p'].forEach((selector, index) => {
+      const item = document.querySelector(selector);
+      if (!item || editorialRevealBound.has(item)) return;
+      editorialRevealBound.add(item);
+      item.classList.add('gs-scroll-reveal');
+      item.style.setProperty('--gs-reveal-delay', `${index * 180}ms`);
+      editorialRevealObserver.observe(item);
+    });
   }
 
   function enhanceMemoryExperience() {
@@ -3343,7 +3464,7 @@
     if (!document.querySelector('link[data-gs-editorial]')) {
       const sheet = document.createElement('link');
       sheet.rel = 'stylesheet';
-      sheet.href = 'editorial.css?v=20260925e';
+      sheet.href = 'editorial.css?v=20261004c';
       sheet.dataset.gsEditorial = '1';
       document.head.append(sheet);
     }
@@ -3369,6 +3490,18 @@
       cue.setAttribute('aria-label', '向下瀏覽作者介紹');
       cue.innerHTML = '<span>Scroll Down</span><i></i>';
       editorialHero.append(cue);
+    }
+    const scrollCue = editorialHero?.querySelector('.gs-hero-scroll-cue');
+    if (scrollCue && !scrollCue.dataset.gsSlowScrollBound) {
+      scrollCue.dataset.gsSlowScrollBound = '1';
+      scrollCue.addEventListener('click', scrollHeroCueToAbout);
+    }
+    if (editorialHero && !editorialHero.querySelector('.gs-hero-petals')) {
+      const petals = document.createElement('div');
+      petals.className = 'gs-hero-petals';
+      petals.setAttribute('aria-hidden', 'true');
+      for (let index = 0; index < 4; index += 1) petals.append(document.createElement('i'));
+      editorialHero.append(petals);
     }
     editorialHero?.querySelectorAll(':scope > a:not(.gs-hero-scroll-cue)').forEach((link) => link.classList.add('gs-legacy-hero-link'));
     const heroTitle = document.querySelector('#hw-hero');
@@ -3400,6 +3533,10 @@
     const about = document.querySelector("#about");
     about?.querySelectorAll('span').forEach((label) => {
       if (label.textContent.trim() === '關於詩人') label.remove();
+    });
+    const echoHeading = document.querySelector('#echoes h2');
+    Array.from(echoHeading?.parentElement?.querySelectorAll('span') || []).forEach((label) => {
+      if (label.textContent.trim() === '讀者回聲') label.remove();
     });
     const photo = about?.querySelector('img.gs-author-photo, img[alt*="詩人"], img');
     if (about && photo) {
@@ -3440,45 +3577,7 @@
     mountDecoration(poemsSection, 'gs-plum-decor-poems-right-mid', 'assets/plum-decoration-05.svg');
     mountDecoration(poemsSection, 'gs-plum-decor-poems-left-lower', 'assets/plum-decoration-03.svg');
 
-    if (!document.documentElement.dataset.gsPlumMotionBound) {
-      document.documentElement.dataset.gsPlumMotionBound = '1';
-      const awakenPlums = (section) => {
-        const branches = Array.from(section.querySelectorAll('.gs-plum-decor'));
-        branches.forEach((branch, index) => {
-          window.setTimeout(() => branch.classList.add('is-plum-awake'), index * 110);
-        });
-        branches.slice(0, 2).forEach((branch, branchIndex) => {
-          const branchRect = branch.getBoundingClientRect();
-          const sectionRect = section.getBoundingClientRect();
-          [0, 1, 2].forEach((petalIndex) => {
-            const petal = document.createElement('i');
-            petal.className = 'gs-falling-petal';
-            petal.setAttribute('aria-hidden', 'true');
-            petal.style.left = `${branchRect.left - sectionRect.left + branchRect.width * (.45 + petalIndex * .16)}px`;
-            petal.style.top = `${branchRect.top - sectionRect.top + branchRect.height * (.34 + petalIndex * .09)}px`;
-            petal.style.setProperty('--petal-delay', `${(branchIndex * .18 + petalIndex * .22).toFixed(2)}s`);
-            petal.style.setProperty('--petal-x', `${petalIndex % 2 ? -22 : 20 + petalIndex * 5}px`);
-            petal.style.setProperty('--petal-rot', `${130 + petalIndex * 72}deg`);
-            section.append(petal);
-            window.setTimeout(() => petal.remove(), 4200);
-          });
-        });
-      };
-      const plumSections = [editorialHero, about, poemsSection].filter(Boolean);
-      if ('IntersectionObserver' in window) {
-        const plumObserver = new IntersectionObserver((entries) => {
-          entries.forEach((entry) => {
-            if (!entry.isIntersecting) return;
-            awakenPlums(entry.target);
-            plumObserver.unobserve(entry.target);
-          });
-        }, { threshold: .18, rootMargin: '0px 0px -12% 0px' });
-        plumSections.forEach((section) => plumObserver.observe(section));
-      } else {
-        plumSections.forEach(awakenPlums);
-      }
-    }
-
+    setupSectionPetals();
     setupEditorialScrollAnimations();
 
     document.querySelector("#plum-memory")?.remove();
