@@ -245,8 +245,8 @@ footer > svg { display: none !important; }
   .gs-hero-scroll-cue i { height: 26px; overflow: hidden; background: rgba(255, 255, 255, .55); }
   .gs-hero-scroll-cue i::after { background: linear-gradient(to bottom, transparent, #fff, transparent); }
   .gs-hero-intro {
-    left: 0; right: 0; top: 600px; width: 100%; height: auto;
-    padding: 0 16px;
+    left: 0; right: 0; top: 605px; width: 100%; height: auto;
+    padding: 0 10px;
     box-sizing: border-box;
     display: flex;
     justify-content: center;
@@ -256,9 +256,9 @@ footer > svg { display: none !important; }
     display: flex; flex-direction: column; align-items: center;
     width: 100%; max-width: 580px;
     font-family: 'GS HanWang ShinSu', var(--font-poetic), serif !important;
-    font-size: clamp(26px, 7vw, 32px) !important;
-    line-height: 1.55;
-    letter-spacing: .06em;
+    font-size: clamp(23px, 6.6vw, 26px) !important;
+    line-height: 1.6;
+    letter-spacing: .05em;
     text-align: center;
   }
   .gs-hero-intro-zh p {
@@ -271,7 +271,7 @@ footer > svg { display: none !important; }
     overflow-wrap: break-word;
   }
   .gs-hero-break { display: inline; }
-  .gs-hero-intro-zh p + p { margin-top: 10px; }
+  .gs-hero-intro-zh p + p { margin-top: 8px; }
   .gs-hero-intro-en { display: none !important; }
   .gs-guo-seal { animation-delay: var(--gs-seal-delay-mobile, 2.4s); }
   #about.gs-author-story { padding: 40px 24px 65px !important; }
